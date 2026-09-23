@@ -24,7 +24,7 @@ storage) is the one backbone that needs a real project:
 | — | Project foundation (Next.js, TS, Tailwind, tokens, fonts, UI kit) | ✅ Done |
 | 2 | DB schema + RLS + search + storage + first-sign-in trigger | ✅ Migrations written (need a Supabase project to apply) |
 | 3 | Auth (Google sign-in, Microsoft disabled w/ tooltip, callback, route protection) | ✅ Done |
-| 3 | Onboarding (6 steps, resumable, seed demo call on finish) | ⬜ Not started |
+| 3 | Onboarding (6 steps, resumable, seed demo call on finish) | ✅ Done (verified against screenshots) |
 | 4 | App shell (top bar, tabs, Ask panel, avatar menu, Refer, Help, recording bar) | ⬜ Not started |
 | 5 | Capture: tab recording + upload | ⬜ Not started |
 | 6 | Pipeline: Deepgram → Claude, status machine, retry (mockable) | ⬜ Not started |
@@ -40,7 +40,7 @@ storage) is the one backbone that needs a real project:
 |---|---|---|
 | 1 | `tsc --noEmit` zero errors | ✅ Passing |
 | 2 | `npm run build` succeeds | ✅ Passing |
-| 3 | `npm run lint` clean | ⬜ Not yet run in CI form |
+| 3 | `npm run lint` clean (app code) | ✅ Passing (ponytail/ excluded) |
 | 4–11 | Route/link/screen/requirement/flow/security/design/responsive sweeps | ⬜ Pending feature completion |
 
 ## Notes / decisions

@@ -26,3 +26,7 @@ Thumbs.db
 
 # unrelated repo that happens to sit in this folder
 ponytail/
+
+# reference material — not part of the shipped repo
+FATHOM_CLONE.docx
+*.docx

@@ -54,6 +54,9 @@ async function main() {
   }
 
   const { text, model } = readFinalResponse(transcriptPath);
+  // On a session's first prompt the transcript holds no assistant message yet,
+  // so UserPromptSubmit cannot know the model. Fill that one field in now.
+  if (model) backfillPromptModel(logDir, sessionId, model);
   writeEntry({
     logDir,
     sessionId,
@@ -167,6 +170,20 @@ function author() {
   } catch {
     return 'unknown';
   }
+}
+
+/**
+ * Replace `model: unknown` with the real model on already-written entries and
+ * in the frontmatter. Only ever touches that field — never prompt or response text.
+ */
+function backfillPromptModel(logDir, sessionId, model) {
+  const existing = fs.readdirSync(logDir).find((f) => f.endsWith(`_${sessionId}.md`));
+  if (!existing) return;
+  const file = path.join(logDir, existing);
+  const content = fs.readFileSync(file, 'utf8');
+  const patched = content.replace(/^model: unknown$/gm, `model: ${model}`);
+  if (patched === content) return;
+  fs.writeFileSync(file, patched, 'utf8');
 }
 
 function writeEntry({ logDir, sessionId, projectDir, type, timestamp, model, body }) {

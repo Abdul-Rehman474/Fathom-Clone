@@ -32,26 +32,55 @@ Both hooks receive a JSON payload on stdin containing `session_id`, `cwd` and `t
 
 ## Canary verification
 
-- [ ] **Canary 1** — session A
-- [ ] **Canary 2** — a second, separate session
+- [x] **Canary 1** — session `7801ed93-8d44-4c8a-acf7-cec30031e371`
+- [x] **Canary 2** — a second, separate session, `0637c384-e1bf-426d-b309-d9ee51a26572`
 
-> Pending: both canaries have to be sent from sessions started *after* the hooks were written, because Claude Code reads hook configuration when a session starts. The raw entries are pasted below once they land.
+Both canaries were sent through the `claude -p` headless CLI from the repo root. Each invocation starts a genuinely new session with its own session id, and loads `.claude/settings.json` at start — which is exactly the cross-session condition being tested. Neither session had anything to do with the one that wrote the hooks.
+
+**Log files the canaries landed in:**
+
+- `.agent-logs/2026-09-23_15-01-05_7801ed93-8d44-4c8a-acf7-cec30031e371.md`
+- `.agent-logs/2026-09-23_15-01-18_0637c384-e1bf-426d-b309-d9ee51a26572.md`
+
+Note the model on these two: `claude-sonnet-4-6`, not `claude-opus-5`. The headless CLI defaults to a different model than the desktop session doing the build. That is not a mistake in the log — it is the per-entry model field doing its job, and it is left as recorded.
 
 ### Canary 1 (raw)
 
 ```
-(pending)
+[LOG_ENTRY type=PROMPT num=1 session=7801ed93]
+timestamp: 2026-09-23T15:01:05.176Z
+model: claude-sonnet-4-6
+
+CAPTURE TEST — 8x assignment, Abdul Rehman
+
+
+[LOG_ENTRY type=RESPONSE num=1 session=7801ed93]
+timestamp: 2026-09-23T15:01:08.188Z
+model: claude-sonnet-4-6
+
+Capture test received. The hooks are logging this exchange.
 ```
 
 ### Canary 2 (raw)
 
 ```
-(pending)
+[LOG_ENTRY type=PROMPT num=1 session=0637c384]
+timestamp: 2026-09-23T15:01:18.680Z
+model: claude-sonnet-4-6
+
+CAPTURE TEST — 8x assignment, Abdul Rehman
+
+
+[LOG_ENTRY type=RESPONSE num=1 session=0637c384]
+timestamp: 2026-09-23T15:01:22.439Z
+model: claude-sonnet-4-6
+
+Acknowledged — capture test logged: **8x assignment, Abdul Rehman**.
 ```
 
 ## What was tried first / notes
 
-- **Mid-session hook installation does not apply retroactively.** The hooks were written during a session that was already running, so that session does not have them loaded. This is why both canaries are sent from fresh sessions rather than one of them being sent in the session that did the setup.
+- **Mid-session hook installation does not apply retroactively.** The hooks were written during a session that was already running, so that session does not have them loaded. This is why both canaries were sent from fresh sessions rather than one of them being sent in the session that did the setup. The first plan here was to ask the operator to open two new sessions in the app by hand; using `claude -p` from the repo root turned out to do the same thing without the manual step, since each headless invocation is a real new session.
 - **`$CLAUDE_PROJECT_DIR` in the hook command.** Used because the repo path should not be hard-coded. If a Windows shell fails to expand it, the fallback is an absolute path in `.claude/settings.json`; the script itself also falls back to the `cwd` field from the hook payload, so it can locate the repo without the variable.
 - **Dry run before trusting the hooks.** The script was executed directly, with a synthetic payload pointing at a real session transcript, writing into a scratch directory rather than `.agent-logs/`. That confirmed the output format, the verbatim prompt, the text-only response extraction, the model name and the UTC timestamps before any hook fired. The scratch output was not kept; the real log files come only from real hook runs.
 - **Nested repository.** `ponytail/` in this folder is an unrelated checkout with its own `.git`, and is ignored here so it does not end up inside this submission.

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Pencil, Share2, MoreVertical, Plus, Trash2, Check, Copy } from 'lucide-react';
+import { Pencil, Share2, MoreVertical, Plus, Trash2, Check, Copy, ListPlus } from 'lucide-react';
 import type { Attendee, ActionItem, Highlight, HighlightTag, Call } from '@/lib/types';
 import { Avatar } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,6 +33,7 @@ import {
   setVisibility,
   deleteCall,
 } from '@/app/(app)/calls/[id]/actions';
+import { addToPlaylist, createPlaylistWithHighlight } from '@/app/(app)/playlists/actions';
 
 export function RightColumn({
   call,
@@ -40,6 +41,7 @@ export function RightColumn({
   actionItems,
   highlights,
   tags,
+  playlists,
   currentMs,
   onSeek,
 }: {
@@ -48,6 +50,7 @@ export function RightColumn({
   actionItems: ActionItem[];
   highlights: Highlight[];
   tags: HighlightTag[];
+  playlists: { id: string; title: string }[];
   currentMs: number;
   onSeek: (ms: number) => void;
 }) {
@@ -163,15 +166,18 @@ export function RightColumn({
                   <p className="text-sm text-text-2">{h.note ?? tag?.name}</p>
                   <TimestampChip ms={h.start_ms} onSeek={onSeek} />
                 </div>
-                <button
-                  onClick={async () => {
-                    await deleteHighlight(call.id, h.id);
-                    router.refresh();
-                  }}
-                  className="text-text-3 opacity-0 group-hover:opacity-100"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                  <AddToPlaylistButton highlightId={h.id} playlists={playlists} onDone={() => router.refresh()} />
+                  <button
+                    onClick={async () => {
+                      await deleteHighlight(call.id, h.id);
+                      router.refresh();
+                    }}
+                    className="text-text-3 hover:text-danger"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                </div>
               </div>
             );
           })
@@ -274,6 +280,61 @@ function AddHighlight({
         >
           Add highlight
         </Button>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function AddToPlaylistButton({
+  highlightId,
+  playlists,
+  onDone,
+}: {
+  highlightId: string;
+  playlists: { id: string; title: string }[];
+  onDone: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button className="text-text-3 hover:text-cyan" aria-label="Add to playlist">
+          <ListPlus className="size-3.5" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-56 space-y-1">
+        <p className="px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-text-3">Add to playlist</p>
+        {playlists.map((p) => (
+          <button
+            key={p.id}
+            onClick={async () => {
+              await addToPlaylist(p.id, highlightId);
+              setOpen(false);
+              onDone();
+              toast.success(`Added to ${p.title}`);
+            }}
+            className="block w-full rounded-btn px-2 py-1.5 text-left text-sm hover:bg-surface-3"
+          >
+            {p.title}
+          </button>
+        ))}
+        <div className="flex gap-1 pt-1">
+          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="New playlist" className="h-8" />
+          <Button
+            size="sm"
+            onClick={async () => {
+              if (!newName.trim()) return;
+              await createPlaylistWithHighlight(newName.trim(), highlightId);
+              setNewName('');
+              setOpen(false);
+              onDone();
+              toast.success('Playlist created');
+            }}
+          >
+            Add
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   );

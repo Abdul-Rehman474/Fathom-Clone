@@ -25,6 +25,7 @@ export function CallView({
   actionItems,
   highlights,
   tags,
+  playlists,
 }: {
   call: Call;
   segments: TranscriptSegment[];
@@ -33,6 +34,7 @@ export function CallView({
   actionItems: ActionItem[];
   highlights: Highlight[];
   tags: HighlightTag[];
+  playlists: { id: string; title: string }[];
 }) {
   const playerRef = useRef<PlayerHandle>(null);
   const [currentMs, setCurrentMs] = useState(0);
@@ -84,6 +86,7 @@ export function CallView({
         actionItems={actionItems}
         highlights={highlights}
         tags={tags}
+        playlists={playlists}
         currentMs={currentMs}
         onSeek={seek}
       />

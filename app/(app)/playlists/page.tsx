@@ -1,9 +1,22 @@
 import Link from 'next/link';
-import { ListVideo } from 'lucide-react';
+import { ListVideo, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate } from '@/lib/time';
+import { createPlaylist } from '@/app/(app)/playlists/actions';
+import { Button } from '@/components/ui/button';
 
 export const metadata = { title: 'Playlists' };
+
+function NewPlaylistButton() {
+  return (
+    <form action={createPlaylist}>
+      <input type="hidden" name="title" value="New playlist" />
+      <Button type="submit" size="sm">
+        <Plus /> New playlist
+      </Button>
+    </form>
+  );
+}
 
 export default async function PlaylistsPage() {
   const supabase = await createClient();
@@ -29,13 +42,19 @@ export default async function PlaylistsPage() {
           <li>✓ Create training libraries of key moments</li>
           <li>✓ Share customer testimonials</li>
         </ul>
+        <div className="mt-8 flex justify-center">
+          <NewPlaylistButton />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-4xl space-y-3">
-      <h1 className="mb-4 text-lg font-semibold">Playlists</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-lg font-semibold">Playlists</h1>
+        <NewPlaylistButton />
+      </div>
       {playlists.map((p) => {
         const count = (p as { playlist_items: { count: number }[] }).playlist_items?.[0]?.count ?? 0;
         return (

@@ -1,8 +1,10 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { seedDemoCall } from '@/lib/seed/demo-call';
 import { randomBytes } from 'node:crypto';
 
@@ -104,5 +106,28 @@ export async function finishOnboarding() {
   } catch {
     // Never block finishing onboarding on the demo seed.
   }
+  await creditReferrer(user.id);
   redirect('/calls');
+}
+
+/** If the user arrived via /invite/{code}, credit the inviter +10 (FR-6.13). */
+async function creditReferrer(inviteeId: string) {
+  try {
+    const store = await cookies();
+    const code = store.get('ref_code')?.value;
+    if (!code) return;
+    const admin = createAdminClient();
+    const { data: inviter } = await admin
+      .from('profiles')
+      .select('id, credits')
+      .eq('invite_code', code)
+      .maybeSingle();
+    if (inviter && inviter.id !== inviteeId) {
+      await admin.from('referrals').insert({ inviter_id: inviter.id, invitee_id: inviteeId });
+      await admin.from('profiles').update({ credits: (inviter.credits ?? 25) + 10 }).eq('id', inviter.id);
+    }
+    store.delete('ref_code');
+  } catch {
+    // Referral crediting is best-effort.
+  }
 }

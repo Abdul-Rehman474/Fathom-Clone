@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PROTECTED_PREFIXES = ['/calls', '/team', '/playlists', '/alerts', '/deals', '/settings', '/onboarding'];
+const PROTECTED_PREFIXES = ['/calls', '/team', '/playlists', '/alerts', '/deals', '/settings', '/onboarding', '/join'];
 
 /**
  * Refresh the Supabase session on every request and guard the app routes.

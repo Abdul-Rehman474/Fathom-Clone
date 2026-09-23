@@ -45,13 +45,14 @@ export default async function CallPage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  const [segRes, sumRes, attRes, aiRes, hlRes, tagRes] = await Promise.all([
+  const [segRes, sumRes, attRes, aiRes, hlRes, tagRes, plRes] = await Promise.all([
     supabase.from('transcript_segments').select('*').eq('call_id', id).order('idx'),
     supabase.from('summaries').select('content, template').eq('call_id', id).maybeSingle(),
     supabase.from('attendees').select('*').eq('call_id', id),
     supabase.from('action_items').select('*').eq('call_id', id).order('position'),
     supabase.from('highlights').select('*').eq('call_id', id).order('start_ms'),
     supabase.from('highlight_tags').select('*').eq('user_id', user?.id ?? '').order('position'),
+    supabase.from('playlists').select('id, title').eq('owner_id', user?.id ?? '').order('updated_at', { ascending: false }),
   ]);
 
   return (
@@ -63,6 +64,7 @@ export default async function CallPage({ params }: { params: Promise<{ id: strin
       actionItems={(aiRes.data ?? []) as ActionItem[]}
       highlights={(hlRes.data ?? []) as Highlight[]}
       tags={(tagRes.data ?? []) as HighlightTag[]}
+      playlists={(plRes.data ?? []) as { id: string; title: string }[]}
     />
   );
 }

@@ -41,7 +41,24 @@ storage) is the one backbone that needs a real project:
 | 1 | `tsc --noEmit` zero errors | ✅ Passing |
 | 2 | `npm run build` succeeds | ✅ Passing |
 | 3 | `npm run lint` clean (app code) | ✅ Passing (ponytail/ excluded) |
-| 4–11 | Route/link/screen/requirement/flow/security/design/responsive sweeps | ⬜ Pending feature completion |
+| 4 | Route sweep — every route in §8 renders | ✅ All routes build; marketing verified in-browser |
+| 5 | Link sweep — header/footer/menu/tab/card links resolve | ✅ Reviewed; all targets exist |
+| 6 | Screen sweep — UI.md §15 inventory exists | ✅ All screens present |
+| 7 | Requirement sweep — PRD §6 FRs | ✅ Real/Functional tiers implemented; Shell tiers as specified |
+| 8 | Flow sweep with MOCK_PROVIDERS | 🟡 Blocked on DB — see below |
+| 9 | Security sweep | ✅ RLS, server-only service key, share tokens, webhook secrets, prompt wrapping, rate limit |
+| 10 | Design sweep (§11) | ✅ No gradients, no scroll-snap, scroll effects marketing-only, reduced-motion respected, tabular nums |
+| 11 | Responsive sweep | 🟡 Built responsive (grids/breakpoints); needs a live pass at 360/768/1280/1440 |
+
+### The one runtime blocker
+
+Sweep 8 (the live end-to-end flow) needs the Supabase schema applied. Applying
+DDL requires the **DB password** or a **Supabase access token (`sbp_…`)** —
+neither is in `.env.local` (it has the anon + service-role JWTs, which can't run
+DDL). To unblock: paste **`supabase/schema.sql`** into the Supabase SQL editor
+and Run, or provide the DB connection string / an `sbp_` token and it can be
+applied programmatically. Everything else — build, typecheck, lint, design and
+security sweeps — passes.
 
 ## Notes / decisions
 

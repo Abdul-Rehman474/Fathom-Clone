@@ -1,0 +1,53 @@
+import { NextResponse, type NextRequest } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { storeTokens } from '@/lib/providers/integrations';
+import { googleExchangeCode, googleAccountEmail } from '@/lib/providers/google-meet';
+import { zoomExchangeCode, zoomAccountEmail } from '@/lib/providers/zoom';
+
+/** OAuth callback: verify state, exchange the code, store encrypted tokens. */
+export async function GET(request: NextRequest, ctx: { params: Promise<{ provider: string }> }) {
+  const { provider } = await ctx.params;
+  if (provider !== 'google' && provider !== 'zoom') {
+    return NextResponse.redirect(new URL('/settings', request.url));
+  }
+
+  const code = request.nextUrl.searchParams.get('code');
+  const state = request.nextUrl.searchParams.get('state');
+  const cookieState = request.cookies.get(`oauth_state_${provider}`)?.value;
+  const next = request.cookies.get(`oauth_next_${provider}`)?.value ?? '/settings';
+
+  const fail = (reason: string) => {
+    const back = new URL(next, request.url);
+    back.searchParams.set('connect_error', reason);
+    return NextResponse.redirect(back);
+  };
+
+  if (!code || !state || !cookieState || state !== cookieState) return fail('state_mismatch');
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.redirect(new URL('/login', request.url));
+
+  try {
+    if (provider === 'google') {
+      const tokens = await googleExchangeCode(code);
+      const email = await googleAccountEmail(tokens.access_token);
+      await storeTokens(supabase, user.id, 'google', tokens, email);
+    } else {
+      const tokens = await zoomExchangeCode(code);
+      const email = await zoomAccountEmail(tokens.access_token);
+      await storeTokens(supabase, user.id, 'zoom', tokens, email);
+    }
+  } catch (e) {
+    return fail(e instanceof Error ? e.message.slice(0, 60) : 'exchange_failed');
+  }
+
+  const back = new URL(next, request.url);
+  back.searchParams.set('connected', provider);
+  const res = NextResponse.redirect(back);
+  res.cookies.delete(`oauth_state_${provider}`);
+  res.cookies.delete(`oauth_next_${provider}`);
+  return res;
+}

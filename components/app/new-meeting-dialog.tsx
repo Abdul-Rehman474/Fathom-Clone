@@ -52,33 +52,91 @@ export function NewMeetingDialog({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* -------- Create meeting (connector seam — Prompt 3) -------- */
+/* -------- Create meeting (Google Meet / Zoom) -------- */
 function CreateMeetingPanel() {
-  const [platform, setPlatform] = useState<'meet' | 'zoom'>('meet');
+  const [platform, setPlatform] = useState<'google' | 'zoom'>('google');
+  const [title, setTitle] = useState('');
+  const [autoNote, setAutoNote] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ url: string; callId: string | null } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function create() {
+    setBusy(true);
+    try {
+      const res = await fetch('/api/meetings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: platform, title, sendNotetaker: autoNote }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        if (json.error === 'not_connected') {
+          toast.error(`Connect ${platform === 'google' ? 'Google Meet' : 'Zoom'} in Settings first.`);
+        } else {
+          toast.error(json.message ?? 'Could not create the meeting');
+        }
+        return;
+      }
+      setResult({ url: json.meetingUrl, callId: json.callId });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (result) {
+    return (
+      <div className="space-y-4">
+        <p className="text-lg font-semibold">Your meeting is ready 🎉</p>
+        <div className="flex gap-2">
+          <Input readOnly value={result.url} />
+          <Button
+            onClick={() => {
+              navigator.clipboard.writeText(result.url).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              });
+            }}
+          >
+            {copied ? 'Copied' : 'Copy'}
+          </Button>
+        </div>
+        <div className="flex gap-2">
+          <a href={result.url} target="_blank" rel="noopener noreferrer" className="flex-1">
+            <Button className="w-full">Join meeting ↗</Button>
+          </a>
+        </div>
+        <p className="flex items-center gap-2 text-sm text-text-3">
+          <Bot className="size-4" />{' '}
+          {autoNote ? 'The notetaker will join when the bot connector is enabled.' : 'Notetaker not sent.'}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <Input placeholder="Meeting title" />
+      <Input placeholder="Meeting title" value={title} onChange={(e) => setTitle(e.target.value)} />
       <div className="flex gap-2">
-        {(['meet', 'zoom'] as const).map((p) => (
+        {(['google', 'zoom'] as const).map((p) => (
           <button
             key={p}
             onClick={() => setPlatform(p)}
             className={cn(
-              'flex-1 rounded-btn border px-3 py-2 text-sm capitalize',
+              'flex-1 rounded-btn border px-3 py-2 text-sm',
               platform === p ? 'border-cyan text-cyan' : 'border-border text-text-2',
             )}
           >
-            {p === 'meet' ? 'Google Meet' : 'Zoom'}
+            {p === 'google' ? 'Google Meet' : 'Zoom'}
           </button>
         ))}
       </div>
-      <div className="flex items-start gap-2 rounded-btn border border-border bg-surface-2 p-3 text-sm text-text-3">
-        <AlertTriangle className="mt-0.5 size-4 text-warning" />
-        Creating real meeting links needs the {platform === 'meet' ? 'Google Meet' : 'Zoom'} connector,
-        which is set up in a later step. Connect it in Settings → Video conferencing.
-      </div>
-      <Button variant="secondary" className="w-full" disabled>
-        <Link2 /> Connect a provider to create meetings
+      <label className="flex items-center gap-2 text-sm text-text-2">
+        <input type="checkbox" checked={autoNote} onChange={(e) => setAutoNote(e.target.checked)} /> Send notetaker
+        automatically
+      </label>
+      <Button className="w-full" onClick={create} disabled={busy}>
+        <Link2 /> {busy ? 'Creating…' : 'Create & open'}
       </Button>
     </div>
   );

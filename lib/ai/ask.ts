@@ -1,6 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { getAnthropic, MODEL_SUMMARY, wrapTranscript } from '@/lib/ai/client';
+import { groqStream, hasLLM, MODEL_SUMMARY, wrapTranscript } from '@/lib/ai/client';
 import { searchSegments, groupHitsByCall } from '@/lib/search';
 import { msToClock } from '@/lib/time';
 
@@ -58,10 +58,9 @@ export async function streamAnswer(params: {
   context: string;
   scopeLabel: string;
 }): Promise<ReadableStream<Uint8Array>> {
-  const anthropic = getAnthropic();
   const enc = new TextEncoder();
 
-  if (!anthropic || !params.context.trim()) {
+  if (!hasLLM() || !params.context.trim()) {
     const answer = mockAnswer(params);
     return new ReadableStream({
       async start(controller) {
@@ -75,24 +74,13 @@ export async function streamAnswer(params: {
   }
 
   const system = `You answer questions about the user's meetings using only the provided context. Cite moments as [m:ss]. If the answer isn't in the context, say so. Scope: ${params.scopeLabel}.`;
-  const stream = await anthropic.messages.stream({
+  return groqStream({
     model: MODEL_SUMMARY,
-    max_tokens: 1024,
-    system,
+    maxTokens: 1024,
     messages: [
+      { role: 'system', content: system },
       { role: 'user', content: `${wrapTranscript(params.context)}\n\nQuestion: ${params.question}` },
     ],
-  });
-
-  return new ReadableStream({
-    async start(controller) {
-      for await (const event of stream) {
-        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-          controller.enqueue(enc.encode(event.delta.text));
-        }
-      }
-      controller.close();
-    },
   });
 }
 
@@ -103,5 +91,5 @@ function mockAnswer({ question, context }: { question: string; context: string }
   }
   return `Based on your meetings: ${question.replace(/\?$/, '')} — the discussion touched on this${
     firstTs ? ` around [${firstTs}]` : ''
-  }. Here's the gist drawn from the transcript context you have, with the key moment linked above. (This is a mock answer; add ANTHROPIC_API_KEY for live, reasoned responses.)`;
+  }. Here's the gist drawn from the transcript context you have, with the key moment linked above. (This is a mock answer; add GROQ_API_KEY for live, reasoned responses.)`;
 }

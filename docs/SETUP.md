@@ -34,17 +34,26 @@ the call page, Ask, search, highlights, playlists, sharing, settings.
 
 ---
 
-## Tier 2 — real AI (optional; drop `MOCK_PROVIDERS` or set per-call)
+## Tier 2 — real AI (optional; set `MOCK_PROVIDERS=false`)
 
 | Key | Provider | Notes |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | console.anthropic.com | Summaries + Ask (Claude) |
+| `GROQ_API_KEY` | console.groq.com/keys | Summaries + Ask + help bot (Groq, OpenAI-compatible) |
+| `GROQ_MODEL` | default `llama-3.3-70b-versatile` | Summaries + Ask |
+| `GROQ_FAST_MODEL` | default `llama-3.1-8b-instant` | Titles + FAQ bot |
 | `DEEPGRAM_API_KEY` | console.deepgram.com | Transcription (nova-3) |
 | `DEEPGRAM_WEBHOOK_SECRET` | you choose a random string | Verifies the async callback |
 
-For Deepgram callbacks to reach your machine locally you need a public tunnel
-(`cloudflared tunnel --url http://localhost:3000` or `ngrok http 3000`) and set
-`NEXT_PUBLIC_SITE_URL` to the tunnel URL. On Vercel the deployed URL works
+The LLM is **Groq**, not Claude — summaries use Groq JSON mode (validated with
+Zod, one retry) and Ask streams from Groq. LLM and transcription are gated
+independently: with only a Deepgram key set and no Groq key, transcription is
+live and summaries fall back to the deterministic mock.
+
+**Deepgram locally:** its callback is async, so it must reach a public URL. On
+localhost run a tunnel (`cloudflared tunnel --url http://localhost:3000` or
+`ngrok http 3000`), set `NEXT_PUBLIC_SITE_URL` to the tunnel URL, and set
+`MOCK_PROVIDERS=false`. Without a tunnel, keep `MOCK_PROVIDERS=true` — the
+pipeline still runs end-to-end on fixtures. On Vercel the deployed URL works
 directly.
 
 ---

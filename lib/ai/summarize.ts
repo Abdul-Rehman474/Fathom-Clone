@@ -1,6 +1,6 @@
 import 'server-only';
-import { getAnthropic, MODEL_SUMMARY, wrapTranscript } from '@/lib/ai/client';
-import { summarySchema, summaryToolInputSchema, type SummaryOutput } from '@/lib/ai/schemas';
+import { groqChat, hasLLM, MODEL_SUMMARY, wrapTranscript } from '@/lib/ai/client';
+import { summarySchema, type SummaryOutput } from '@/lib/ai/schemas';
 import { templateInstruction } from '@/lib/ai/templates';
 import { mockSummary, type Utterance } from '@/lib/providers/mock-fixtures';
 import { msToClock } from '@/lib/time';
@@ -28,52 +28,56 @@ function segmentsToUtterances(segments: SegmentInput[]): Utterance[] {
   }));
 }
 
+const SCHEMA_HINT = `Return ONLY a JSON object with these keys:
+{
+  "title": string,
+  "overview": string,
+  "purpose": string,
+  "key_takeaways": string[],
+  "topics": [{ "title": string, "bullets": [{ "text": string, "start_ms": number|null }] }],
+  "decisions": [{ "text": string, "start_ms": number|null }],
+  "action_items": [{ "text": string, "assignee": string|null, "start_ms": number|null }],
+  "next_steps": string[],
+  "questions": string[]
+}
+start_ms is milliseconds derived from the [m:ss] timestamps; use null when no clear moment.`;
+
 /**
  * Summarize a transcript into the structured schema (architecture.md §4.1).
- * Uses Claude tool-use with one retry on validation failure; falls back to a
+ * Uses Groq JSON mode with one retry on validation failure; falls back to a
  * deterministic mock when no key / MOCK_PROVIDERS.
  */
 export async function summarizeCall(
   segments: SegmentInput[],
   template: string,
 ): Promise<{ summary: SummaryOutput; model: string }> {
-  const anthropic = getAnthropic();
-  if (!anthropic) {
+  if (!hasLLM()) {
     return { summary: mockSummary(segmentsToUtterances(segments)), model: 'mock' };
   }
 
-  const system = `You are an expert meeting analyst. Summarize the meeting into the provided tool schema. ${templateInstruction(
+  const system = `You are an expert meeting analyst. ${templateInstruction(
     template,
-  )} Use the [m:ss] timestamps from the transcript to set start_ms (milliseconds) on bullets, decisions and action items where a moment is identifiable, otherwise null. Assign action items to the speaker who owns them when clear.`;
-
+  )} ${SCHEMA_HINT} Assign action items to the speaker who owns them when clear.`;
   const content = wrapTranscript(transcriptText(segments));
 
   async function attempt(extra?: string): Promise<SummaryOutput> {
-    const msg = await anthropic!.messages.create({
+    const raw = await groqChat({
       model: MODEL_SUMMARY,
-      max_tokens: 4096,
-      system,
-      tools: [
-        {
-          name: 'emit_summary',
-          description: 'Emit the structured meeting summary.',
-          input_schema: summaryToolInputSchema as never,
-        },
+      json: true,
+      maxTokens: 4096,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: extra ? `${content}\n\n${extra}` : content },
       ],
-      tool_choice: { type: 'tool', name: 'emit_summary' },
-      messages: [{ role: 'user', content: extra ? `${content}\n\n${extra}` : content }],
     });
-    const block = msg.content.find((c) => c.type === 'tool_use');
-    if (!block || block.type !== 'tool_use') throw new Error('No tool_use in response');
-    return summarySchema.parse(block.input);
+    return summarySchema.parse(JSON.parse(raw));
   }
 
   try {
     return { summary: await attempt(), model: MODEL_SUMMARY };
   } catch (err) {
-    // One retry with the validation error appended.
     const summary = await attempt(
-      `The previous output failed validation: ${err instanceof Error ? err.message : String(err)}. Return valid data matching the schema exactly.`,
+      `The previous output was invalid: ${err instanceof Error ? err.message : String(err)}. Return valid JSON matching the schema exactly.`,
     );
     return { summary, model: MODEL_SUMMARY };
   }

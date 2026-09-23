@@ -1,0 +1,142 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------ *
+ * Design tokens — designPlan.md §3. Single source of truth.
+ * The site is dark only; there is no light theme.
+ * ------------------------------------------------------------------ */
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --bg-black: #000000;
+  --bg-app: #1b1b1d;
+  --surface-1: #232326;
+  --surface-2: #2c2c30;
+  --surface-3: #36363b;
+  --border: #34343a;
+  --border-strong: #4a4a52;
+
+  /* text */
+  --text-1: #ffffff;
+  --text-2: #b4b4bc;
+  --text-3: #7c7c86;
+
+  /* brand */
+  --cyan: #00b8f5;
+  --cyan-press: #0098cc;
+  --cyan-tint: #0f2a36;
+  --yellow: #fff38a;
+  --orange: #ff7a1a;
+  --gold: #ffc21a;
+  --purple: #9b1cff;
+  --pink: #ff9ec7;
+
+  /* status */
+  --success: #22c55e;
+  --warning: #facc15;
+  --danger: #ef4444;
+  --danger-tint: #3a1518;
+
+  /* highlight tag defaults */
+  --tag-highlight: #00b8f5;
+  --tag-positive: #22c55e;
+  --tag-review: #facc15;
+  --tag-feedback: #ff7a1a;
+}
+
+/* Map tokens (and next/font CSS vars) onto Tailwind utilities. */
+@theme inline {
+  --color-bg-black: var(--bg-black);
+  --color-bg-app: var(--bg-app);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+
+  --color-cyan: var(--cyan);
+  --color-cyan-press: var(--cyan-press);
+  --color-cyan-tint: var(--cyan-tint);
+  --color-yellow: var(--yellow);
+  --color-orange: var(--orange);
+  --color-gold: var(--gold);
+  --color-purple: var(--purple);
+  --color-pink: var(--pink);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+
+  /* fonts — vars injected by next/font in app/layout.tsx */
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-pill: var(--font-barlow), var(--font-inter), sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  /* radii — designPlan.md §5 */
+  --radius-chip: 6px;
+  --radius-btn: 8px;
+  --radius-card: 12px;
+  --radius-frame: 20px;
+  --radius-pill: 999px;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  background: var(--bg-app);
+  color: var(--text-1);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Visible 2px cyan focus ring everywhere (designPlan.md §10). */
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Tabular numbers on timers/durations/counts (designPlan.md §11). */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Styled, visible scrollbars on scroll panes (designPlan.md §1). */
+.scroll-styled {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.scroll-styled::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scroll-styled::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 2px solid var(--bg-app);
+}
+
+/* Reduced motion: kill animation and scroll-driven effects (designPlan.md §7.2). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

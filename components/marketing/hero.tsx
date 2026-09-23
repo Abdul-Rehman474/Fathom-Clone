@@ -22,7 +22,7 @@ export function Hero() {
       <div className="mx-auto w-full max-w-[1200px]">
         <p className="micro-label mb-6 text-muted-dark blur-[1.5px]">Meeting intelligence, reimagined</p>
 
-        <h1 className="font-display text-6xl font-semibold leading-[0.98] tracking-tight sm:text-8xl">
+        <h1 className="font-display text-5xl font-semibold leading-[0.98] tracking-tight sm:text-6xl md:text-7xl lg:text-8xl">
           Your meetings,
           <br />
           <span className="text-lime">

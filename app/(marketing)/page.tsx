@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { Pill } from '@/components/ui/button';
-import { Reveal, RevealItem, Marquee, CountUp } from '@/components/marketing/motion';
-import { Planet, Moon, Rocket, Astronaut, Sparkle } from '@/components/marketing/illustrations';
+import { Reveal, Marquee, CountUp } from '@/components/marketing/motion';
+import { Planet, Rocket, Sparkle } from '@/components/marketing/illustrations';
 import { ClarityMomentumEase, FeatureCarousel } from '@/components/marketing/home-sections';
+import { Hero } from '@/components/marketing/hero';
 import { LOGO_WALL } from '@/lib/marketing';
 import { BRAND_NAME } from '@/lib/config';
 
@@ -14,56 +15,7 @@ export default function HomePage() {
   return (
     <>
       {/* 1. Hero */}
-      <Section className="!py-20">
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-          <Reveal stagger>
-            <RevealItem>
-              <h1 className="font-display text-5xl font-light leading-[1.05] tracking-tight sm:text-7xl">
-                AI notetaking that is <span className="text-orange">out of this world</span>
-              </h1>
-            </RevealItem>
-            <RevealItem>
-              <p className="mt-6 max-w-lg text-lg text-text-2">
-                {BRAND_NAME} summarizes your meetings so you can focus on the conversation.{' '}
-                <span className="font-semibold text-text-1">Now available bot-free.</span>
-              </p>
-            </RevealItem>
-            <RevealItem>
-              <Link href="/signup" className="mt-8 inline-block">
-                <Pill>Get started — free forever</Pill>
-              </Link>
-            </RevealItem>
-            <RevealItem>
-              <p className="mt-4 text-xs uppercase tracking-wide text-text-3">
-                🔒 SOC 2 Type II · GDPR · HIPAA Compliant · SSO / SCIM (sample)
-              </p>
-            </RevealItem>
-          </Reveal>
-
-          <div className="relative flex justify-center">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-frame border border-cyan/50 bg-surface-1 p-4 text-sm text-text-2">
-                Capture mode
-                <div className="mt-2 space-y-1 text-text-3">
-                  <div>Audio &amp; video</div>
-                  <div>Audio only</div>
-                  <div>Transcript only</div>
-                </div>
-              </div>
-              <div className="rounded-frame border border-orange/50 bg-surface-1 p-4">
-                <span className="text-sm font-semibold text-cyan">✧ Ask Fathom</span>
-                <Astronaut className="mt-2 size-20" />
-              </div>
-              <div className="rounded-frame border border-purple/50 bg-surface-1 p-4 text-sm text-text-2">
-                “What follow-ups did I commit to this week?”
-              </div>
-              <div className="flex items-center justify-center rounded-frame border border-border bg-surface-1 p-4">
-                <Moon className="size-24" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </Section>
+      <Hero />
 
       {/* 2. Proof row */}
       <Section className="!py-12">

@@ -1,17 +1,21 @@
 import Link from 'next/link';
-import { Inbox } from 'lucide-react';
-import { listCalls, type CallCardData } from '@/lib/queries';
+import { listCalls, getProfileAndSettings, type CallCardData } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/server';
 import { searchSegments, groupHitsByCall } from '@/lib/search';
-import { CallCard } from '@/components/call/call-card';
+import { MeetingRow } from '@/components/call/meeting-row';
 import { CallsFilterBar } from '@/components/app/calls-filter-bar';
 import { AskPanel } from '@/components/app/ask-panel';
-import { Button } from '@/components/ui/button';
 import { NewMeetingDialog } from '@/components/app/new-meeting-dialog';
+import { Button } from '@/components/ui/button';
 import { TimestampChip } from '@/components/ui/chips';
 import { formatMonth, formatDate } from '@/lib/time';
 
 export const metadata = { title: 'My Calls' };
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+}
 
 function groupByMonth(calls: CallCardData[]) {
   const groups = new Map<string, CallCardData[]>();
@@ -35,43 +39,37 @@ export default async function CallsPage({
     const supabase = await createClient();
     const hits = groupHitsByCall(await searchSegments(supabase, q));
     return (
-      <div className="flex gap-6">
-        <div className="min-w-0 flex-1">
-          <div className="mb-4 flex items-center justify-between">
-            <h1 className="text-lg font-semibold">
-              {hits.length} {hits.length === 1 ? 'result' : 'results'} for “{q}”
-            </h1>
-            <Link href="/calls" className="text-sm text-cyan hover:underline">
-              Clear search
-            </Link>
-          </div>
-          {hits.length === 0 ? (
-            <p className="text-text-3">No transcripts match that phrase.</p>
-          ) : (
-            <div className="space-y-4">
-              {hits.map((h) => (
-                <Link
-                  key={h.callId}
-                  href={`/calls/${h.callId}`}
-                  className="block rounded-card border border-border bg-surface-1 p-4 hover:bg-surface-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold">{h.title}</span>
-                    <span className="text-xs text-text-3 tnum">{formatDate(h.createdAt)}</span>
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    {h.snippets.map((s, i) => (
-                      <div key={i} className="flex items-start gap-2 text-sm text-text-2">
-                        <TimestampChip ms={s.startMs} />
-                        <span className="line-clamp-1">{s.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="font-display text-2xl font-semibold">
+            {hits.length} {hits.length === 1 ? 'result' : 'results'} for “{q}”
+          </h1>
+          <Link href="/calls" className="text-sm text-lime hover:underline">
+            Clear search
+          </Link>
         </div>
+        {hits.length === 0 ? (
+          <p className="text-muted">No transcripts match that phrase.</p>
+        ) : (
+          <div>
+            {hits.map((h) => (
+              <Link key={h.callId} href={`/calls/${h.callId}`} className="group block border-b border-border py-5 hover:translate-x-0.5 transition-transform">
+                <div className="flex items-center justify-between">
+                  <span className="font-display font-semibold group-hover:text-lime">{h.title}</span>
+                  <span className="text-xs text-text-3 tnum">{formatDate(h.createdAt)}</span>
+                </div>
+                <div className="mt-2 space-y-1">
+                  {h.snippets.map((s, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm text-muted">
+                      <TimestampChip ms={s.startMs} />
+                      <span className="line-clamp-1">{s.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -81,39 +79,60 @@ export default async function CallsPage({
   const sort = (sp.sort as 'newest' | 'oldest') ?? 'newest';
   const hasActionItems = sp.actions === 'true';
 
-  const { calls, total, pageSize } = await listCalls({
-    scope: 'mine',
-    page,
-    platform,
-    sort,
-    hasActionItems,
-  });
+  const [{ calls, total, pageSize }, { profile }] = await Promise.all([
+    listCalls({ scope: 'mine', page, platform, sort, hasActionItems }),
+    getProfileAndSettings(),
+  ]);
   const grouped = groupByMonth(calls);
   const hasMore = page * pageSize < total;
+  const firstName = (profile?.full_name ?? 'there').split(' ')[0];
 
   return (
-    <div className="flex gap-6">
+    <div className="flex gap-8">
       <div className="min-w-0 flex-1">
-        <div className="mb-6 flex items-center justify-between gap-4">
+        {/* Greeting / command header */}
+        <header className="mb-10">
+          <p className="micro-label mb-3">{greeting()}, {firstName}</p>
+          <h1 className="max-w-xl font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl">
+            Your meetings,
+            <br />
+            <span className="text-muted">organized and understood.</span>
+          </h1>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <NewMeetingDialog>
+              <Button>New Meeting</Button>
+            </NewMeetingDialog>
+            <NewMeetingDialog>
+              <Button variant="outline">Start Capture</Button>
+            </NewMeetingDialog>
+          </div>
+        </header>
+
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <p className="micro-label">Recent meetings</p>
           <CallsFilterBar platform={platform} sort={sort} hasActionItems={hasActionItems} />
         </div>
 
         {calls.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-4 rounded-frame border border-border bg-surface-1 py-24 text-center">
-            <Inbox className="size-10 text-text-3" />
-            <p className="text-lg font-semibold">No call recordings</p>
-            <NewMeetingDialog>
-              <Button>+ New Meeting</Button>
-            </NewMeetingDialog>
+          <div className="border-t border-border py-20 text-center">
+            <p className="micro-label mb-3">No calls yet</p>
+            <p className="mx-auto max-w-sm text-muted">
+              Your meetings will appear here once you start capturing them.
+            </p>
+            <div className="mt-6 flex justify-center">
+              <NewMeetingDialog>
+                <Button>Start a meeting →</Button>
+              </NewMeetingDialog>
+            </div>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-10">
             {grouped.map(([month, monthCalls]) => (
               <section key={month}>
-                <h2 className="mb-3 text-base font-semibold">{month}</h2>
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <h2 className="mb-1 font-display text-sm font-semibold text-text-3">{month}</h2>
+                <div className="border-t border-border">
                   {monthCalls.map((c) => (
-                    <CallCard key={c.id} call={c} />
+                    <MeetingRow key={c.id} call={c} />
                   ))}
                 </div>
               </section>
@@ -129,7 +148,9 @@ export default async function CallsPage({
         )}
       </div>
 
-      <AskPanel />
+      <div className="hidden xl:block">
+        <AskPanel />
+      </div>
     </div>
   );
 }

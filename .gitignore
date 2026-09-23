@@ -30,3 +30,6 @@ ponytail/
 # reference material — not part of the shipped repo
 FATHOM_CLONE.docx
 *.docx
+
+# TS build cache
+*.tsbuildinfo

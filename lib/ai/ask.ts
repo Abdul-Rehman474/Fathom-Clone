@@ -1,7 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { groqStream, hasLLM, MODEL_SUMMARY, wrapTranscript } from '@/lib/ai/client';
-import { searchSegments, groupHitsByCall } from '@/lib/search';
+import { searchSegments, searchSummaries, groupHitsByCall } from '@/lib/search';
 import { msToClock } from '@/lib/time';
 
 export interface Citation {
@@ -15,11 +15,17 @@ export async function buildAccountContext(
   supabase: SupabaseClient,
   question: string,
 ): Promise<{ context: string; citations: Citation[] }> {
-  const hits = await searchSegments(supabase, question, 24);
+  const [hits, summaries] = await Promise.all([
+    searchSegments(supabase, question, 24),
+    searchSummaries(supabase, question, 8),
+  ]);
   const grouped = groupHitsByCall(hits).slice(0, 8);
   const citations: Citation[] = [];
   const blocks: string[] = [];
+  const seen = new Set<string>();
+
   for (const g of grouped) {
+    seen.add(g.callId);
     const lines = g.snippets
       .map((s) => {
         citations.push({ callId: g.callId, title: g.title, startMs: s.startMs });
@@ -28,6 +34,15 @@ export async function buildAccountContext(
       .join('\n');
     blocks.push(`Call "${g.title}" (${g.createdAt.slice(0, 10)}):\n${lines}`);
   }
+
+  // Include summary overviews for calls matched only by summary text.
+  for (const s of summaries) {
+    if (seen.has(s.callId) || !s.overview) continue;
+    seen.add(s.callId);
+    citations.push({ callId: s.callId, title: s.title, startMs: 0 });
+    blocks.push(`Call "${s.title}" (${s.createdAt.slice(0, 10)}) — summary:\n${s.overview}`);
+  }
+
   return { context: blocks.join('\n\n'), citations };
 }
 

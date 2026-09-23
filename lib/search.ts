@@ -45,6 +45,35 @@ export async function searchSegments(
   });
 }
 
+/** Full-text search over call summaries (architecture.md §4.2), returning the
+ *  overview text for matching calls the user can view. */
+export async function searchSummaries(
+  supabase: SupabaseClient,
+  query: string,
+  limit = 8,
+): Promise<{ callId: string; title: string; createdAt: string; overview: string }[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const { data } = await supabase
+    .from('summaries')
+    .select('call_id, overview, calls!inner(title, created_at)')
+    .textSearch('tsv', q, { type: 'websearch' })
+    .limit(limit);
+  return (data ?? []).map((r) => {
+    const row = r as unknown as {
+      call_id: string;
+      overview: string | null;
+      calls: { title: string | null; created_at: string };
+    };
+    return {
+      callId: row.call_id,
+      title: row.calls?.title ?? 'Untitled',
+      createdAt: row.calls?.created_at ?? '',
+      overview: row.overview ?? '',
+    };
+  });
+}
+
 /** Group snippet hits by call, keeping the top snippets per call. */
 export function groupHitsByCall(hits: SnippetHit[]) {
   const map = new Map<string, { title: string; createdAt: string; snippets: SnippetHit[] }>();

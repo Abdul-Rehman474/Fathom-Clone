@@ -45,20 +45,35 @@ storage) is the one backbone that needs a real project:
 | 5 | Link sweep — header/footer/menu/tab/card links resolve | ✅ Reviewed; all targets exist |
 | 6 | Screen sweep — UI.md §15 inventory exists | ✅ All screens present |
 | 7 | Requirement sweep — PRD §6 FRs | ✅ Real/Functional tiers implemented; Shell tiers as specified |
-| 8 | Flow sweep with MOCK_PROVIDERS | 🟡 Blocked on DB — see below |
+| 8 | Flow sweep with MOCK_PROVIDERS | ✅ Verified live against Supabase — see below |
 | 9 | Security sweep | ✅ RLS, server-only service key, share tokens, webhook secrets, prompt wrapping, rate limit |
 | 10 | Design sweep (§11) | ✅ No gradients, no scroll-snap, scroll effects marketing-only, reduced-motion respected, tabular nums |
 | 11 | Responsive sweep | 🟡 Built responsive (grids/breakpoints); needs a live pass at 360/768/1280/1440 |
 
-### The one runtime blocker
+### Live end-to-end verification (2026-09-24)
 
-Sweep 8 (the live end-to-end flow) needs the Supabase schema applied. Applying
-DDL requires the **DB password** or a **Supabase access token (`sbp_…`)** —
-neither is in `.env.local` (it has the anon + service-role JWTs, which can't run
-DDL). To unblock: paste **`supabase/schema.sql`** into the Supabase SQL editor
-and Run, or provide the DB connection string / an `sbp_` token and it can be
-applied programmatically. Everything else — build, typecheck, lint, design and
-security sweeps — passes.
+Schema applied to the Supabase project; verified against the running app:
+
+- **DB/RLS/trigger (14/14 checks):** first-sign-in trigger provisions profile +
+  settings + 4 default tags; RLS isolates private calls (owner sees, other user
+  and anon do not); pipeline insert shapes accepted (segments, jsonb summary
+  with generated tsv, action items); `websearch` full-text search works;
+  `can_view_call` RPC returns true for the owner.
+- **App over HTTP (real session):** `/calls` renders the authenticated shell;
+  `POST /api/calls` → signed `upload-url` → **real storage upload (200)** →
+  `complete` → pipeline runs → call reaches **ready**; the call page renders the
+  structured summary with clickable timestamps, auto-created attendees, action
+  items with assignees, and AI highlights.
+- **Endpoints:** per-call Ask streams with a citation; account Ask streams;
+  `/api/meetings` returns a mock Meet link; help bot answers from the FAQ.
+- Storage buckets `recordings`/`thumbnails` exist and are private.
+
+Test users/data created for verification were deleted afterward.
+
+Remaining note: the interactive **Google sign-in** step must be done in a real
+browser (credentials can't be automated); the rest of the flow is verified with
+a programmatic session. Set `MOCK_PROVIDERS=false` (+ a tunnel for Deepgram) to
+exercise live Groq/Deepgram.
 
 ## Notes / decisions
 

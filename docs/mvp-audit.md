@@ -25,13 +25,13 @@ storage) is the one backbone that needs a real project:
 | 2 | DB schema + RLS + search + storage + first-sign-in trigger | ✅ Migrations written (need a Supabase project to apply) |
 | 3 | Auth (Google sign-in, Microsoft disabled w/ tooltip, callback, route protection) | ✅ Done |
 | 3 | Onboarding (6 steps, resumable, seed demo call on finish) | ✅ Done (verified against screenshots) |
-| 4 | App shell (top bar, tabs, Ask panel, avatar menu, Refer, Help, recording bar) | ⬜ Not started |
-| 5 | Capture: tab recording + upload | ⬜ Not started |
-| 6 | Pipeline: Deepgram → Claude, status machine, retry (mockable) | ⬜ Not started |
-| 7 | My Calls + search | ⬜ Not started |
-| 8 | Call page (player, summary/transcript/ask, action items, highlights, share) | ⬜ Not started |
-| 9 | Sharing, playlists, team | ⬜ Not started |
-| 10 | Settings + secondary pages | ⬜ Not started |
+| 4 | App shell (top bar, tabs, Ask panel, avatar menu, Refer, Help) | ✅ Done (recording bar pending) |
+| 5 | Capture: tab recording + upload | ✅ Done (Create/notetaker are seams) |
+| 6 | Pipeline: Deepgram → Claude, status machine, retry (mockable) | ✅ Done |
+| 7 | My Calls + search | ✅ Done |
+| 8 | Call page (player, summary/transcript/ask, action items, highlights, share) | ✅ Done |
+| 9 | Sharing, playlists, team | 🟡 Partial — share popover + token + team upsell + playlists list done; public /share pages + playlist detail + reorder pending |
+| 10 | Settings + secondary pages | 🟡 Partial — behavioural settings (premium + options) wired; video-conf/integrations/highlight-tags CRUD/delete-account pending; deals/alerts/team/playlists pages exist |
 | 11 | Public website | ⬜ Not started |
 
 ## Self-verification sweeps

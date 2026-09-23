@@ -30,9 +30,9 @@ storage) is the one backbone that needs a real project:
 | 6 | Pipeline: Deepgram → Claude, status machine, retry (mockable) | ✅ Done |
 | 7 | My Calls + search | ✅ Done |
 | 8 | Call page (player, summary/transcript/ask, action items, highlights, share) | ✅ Done |
-| 9 | Sharing, playlists, team | 🟡 Partial — share popover + token + team upsell + playlists list done; public /share pages + playlist detail + reorder pending |
-| 10 | Settings + secondary pages | 🟡 Partial — behavioural settings (premium + options) wired; video-conf/integrations/highlight-tags CRUD/delete-account pending; deals/alerts/team/playlists pages exist |
-| 11 | Public website | ⬜ Not started |
+| 9 | Sharing, playlists, team | ✅ Done — public /share + /share/playlist pages, playlist detail (clip player/reorder/play-all/share), add-to-playlist, team invite + join, members card |
+| 10 | Settings + secondary pages | ✅ Done — video-conf status + connect/disconnect, highlight-tag CRUD, integration modals, delete account; deals/alerts pages |
+| 11 | Public website | ✅ Done — home, overview, 4 solutions, integrations index+detail, pricing, what's new, help, legal, security, status, comparison; motion kit (reveal/marquee/count-up) gated on reduced-motion; flat SVG illustrations |
 
 ## Self-verification sweeps
 

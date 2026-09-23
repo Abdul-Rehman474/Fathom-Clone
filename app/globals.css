@@ -129,6 +129,16 @@ body {
   border: 2px solid var(--bg-app);
 }
 
+/* Marquee loop (designPlan.md §7.2). Content is duplicated, so -50% is seamless. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* Reduced motion: kill animation and scroll-driven effects (designPlan.md §7.2). */
 @media (prefers-reduced-motion: reduce) {
   *,

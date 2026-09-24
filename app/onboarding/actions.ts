@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
@@ -24,6 +25,7 @@ export async function saveAccountType(formData: FormData) {
     .from('profiles')
     .update({ account_type: accountType, onboarding_step: 2 })
     .eq('id', user.id);
+  revalidatePath('/onboarding', 'layout');
   redirect('/onboarding/preferences');
 }
 
@@ -36,6 +38,7 @@ export async function savePreferences(formData: FormData) {
   const { supabase, user } = await requireUser();
   await supabase.from('user_settings').update({ notes_on, share_with }).eq('user_id', user.id);
   await supabase.from('profiles').update({ onboarding_step: 3 }).eq('id', user.id);
+  revalidatePath('/onboarding', 'layout');
   redirect('/onboarding/about-you');
 }
 
@@ -47,6 +50,7 @@ export async function saveAboutYou(formData: FormData) {
   });
   const { supabase, user } = await requireUser();
   await supabase.from('profiles').update({ department, role, onboarding_step: 4 }).eq('id', user.id);
+  revalidatePath('/onboarding', 'layout');
   redirect('/onboarding/usage');
 }
 
@@ -86,12 +90,14 @@ export async function saveUsage(formData: FormData) {
     .from('profiles')
     .update({ usage, account_type: usage === 'team' ? 'team' : 'personal', onboarding_step: 5 })
     .eq('id', user.id);
+  revalidatePath('/onboarding', 'layout');
   redirect('/onboarding/connect');
 }
 
 export async function advanceToFirstCall() {
   const { supabase, user } = await requireUser();
   await supabase.from('profiles').update({ onboarding_step: 6 }).eq('id', user.id);
+  revalidatePath('/onboarding', 'layout');
   redirect('/onboarding/first-call');
 }
 
@@ -107,6 +113,7 @@ export async function finishOnboarding() {
     // Never block finishing onboarding on the demo seed.
   }
   await creditReferrer(user.id);
+  revalidatePath('/onboarding', 'layout');
   redirect('/calls');
 }
 

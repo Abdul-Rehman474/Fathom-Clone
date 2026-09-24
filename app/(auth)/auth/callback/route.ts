@@ -12,13 +12,15 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get('next') ?? '/calls';
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=missing_code`);
+    // Provider returned an error (e.g. the user cancelled) or no code at all.
+    const reason = searchParams.get('error') === 'access_denied' ? 'cancelled' : 'oauth_failed';
+    return NextResponse.redirect(`${origin}/login?error=${reason}`);
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
-    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`);
+    return NextResponse.redirect(`${origin}/login?error=session_failed`);
   }
 
   const {

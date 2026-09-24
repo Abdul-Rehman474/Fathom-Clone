@@ -10,9 +10,9 @@ import { MOCK_PROVIDERS } from '@/lib/config';
 const GROQ_BASE = 'https://api.groq.com/openai/v1';
 
 /** Larger model for summaries + Ask. Override with GROQ_MODEL. */
-export const MODEL_SUMMARY = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+export const MODEL_SUMMARY = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 /** Fast model for titles + the FAQ bot. Override with GROQ_FAST_MODEL. */
-export const MODEL_FAST = process.env.GROQ_FAST_MODEL || 'llama-3.1-8b-instant';
+export const MODEL_FAST = process.env.GROQ_FAST_MODEL || 'openai/gpt-oss-20b';
 
 /** Whether live LLM calls are available. */
 export function hasLLM(): boolean {
@@ -41,14 +41,20 @@ export async function groqChat(params: {
     body: JSON.stringify({
       model: params.model,
       messages: params.messages,
-      max_tokens: params.maxTokens ?? 2048,
+      max_tokens: params.maxTokens ?? 4096,
       temperature: params.temperature ?? 0.3,
+      ...reasoning(params.model),
       ...(params.json ? { response_format: { type: 'json_object' } } : {}),
     }),
   });
   if (!res.ok) throw new Error(`Groq error ${res.status}: ${await res.text()}`);
   const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   return json.choices?.[0]?.message?.content ?? '';
+}
+
+/** gpt-oss models reason before answering; keep it short so replies stay fast. */
+function reasoning(model: string) {
+  return model.startsWith('openai/gpt-oss') ? { reasoning_effort: 'low' } : {};
 }
 
 /** Streaming chat completion → a ReadableStream of decoded text deltas. */
@@ -68,6 +74,7 @@ export async function groqStream(params: {
       messages: params.messages,
       max_tokens: params.maxTokens ?? 1024,
       temperature: 0.4,
+      ...reasoning(params.model),
       stream: true,
     }),
   });

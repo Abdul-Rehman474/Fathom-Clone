@@ -39,8 +39,8 @@ the call page, Ask, search, highlights, playlists, sharing, settings.
 | Key | Provider | Notes |
 |---|---|---|
 | `GROQ_API_KEY` | console.groq.com/keys | Summaries + Ask + help bot (Groq, OpenAI-compatible) |
-| `GROQ_MODEL` | default `llama-3.3-70b-versatile` | Summaries + Ask |
-| `GROQ_FAST_MODEL` | default `llama-3.1-8b-instant` | Titles + FAQ bot |
+| `GROQ_MODEL` | default `openai/gpt-oss-120b` | Summaries + Ask |
+| `GROQ_FAST_MODEL` | default `openai/gpt-oss-20b` | Titles + FAQ bot |
 | `DEEPGRAM_API_KEY` | console.deepgram.com | Transcription (nova-3) |
 | `DEEPGRAM_WEBHOOK_SECRET` | you choose a random string | Verifies the async callback |
 

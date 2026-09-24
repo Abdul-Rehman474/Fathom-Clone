@@ -79,7 +79,6 @@ export default async function CallPage({ params }: { params: Promise<{ id: strin
         <p className="micro-label mb-3 !text-danger">Processing stopped</p>
         <h1 className="font-display text-3xl font-semibold tracking-tight">We couldn’t process this recording.</h1>
         <p className="mt-3 text-text-2">Something went wrong during {stage}. Retrying resumes from that step.</p>
-        {c.error && <p className="mt-3 line-clamp-2 text-xs text-text-3">Details: {c.error.slice(0, 160)}</p>}
         <div className="mt-8 flex gap-3">
           <RetryButton callId={c.id} />
           <Link href="/calls" className="inline-flex h-10 items-center px-4 text-sm text-text-2 hover:text-off-white">

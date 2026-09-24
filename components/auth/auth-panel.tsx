@@ -14,6 +14,13 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
+/** Friendly copy for `?error=` codes set by the OAuth callback. */
+const AUTH_ERRORS: Record<string, string> = {
+  cancelled: 'Google sign-in was cancelled. Try again when you’re ready.',
+  oauth_failed: 'We couldn’t complete Google sign-in. Please try again.',
+  session_failed: 'Your sign-in link expired or was already used. Please try again.',
+};
+
 const MICROSOFT_ENABLED = process.env.NEXT_PUBLIC_MICROSOFT_ENABLED === 'true';
 
 function GoogleGlyph() {
@@ -31,6 +38,8 @@ export function AuthPanel({ mode }: { mode: 'signin' | 'signup' }) {
   const params = useSearchParams();
   const next = params.get('next') ?? '/calls';
   const [loading, setLoading] = useState<null | 'google'>(null);
+  const errorCode = params.get('error');
+  const authError = errorCode ? (AUTH_ERRORS[errorCode] ?? AUTH_ERRORS.oauth_failed) : null;
 
   async function signInWithGoogle() {
     setLoading('google');
@@ -46,11 +55,8 @@ export function AuthPanel({ mode }: { mode: 'signin' | 'signup' }) {
       if (error) throw error;
     } catch (e) {
       setLoading(null);
-      toast.error(
-        e instanceof Error && e.message
-          ? e.message
-          : 'Could not start Google sign-in. Check that Supabase auth is configured.',
-      );
+      console.warn('Google sign-in failed to start', e);
+      toast.error('We couldn’t start Google sign-in. Check your connection and try again.');
     }
   }
 
@@ -62,6 +68,12 @@ export function AuthPanel({ mode }: { mode: 'signin' | 'signup' }) {
         <p className="micro-label mb-4">{mode === 'signup' ? 'Create your account' : 'Sign in'}</p>
         <h1 className="font-display text-4xl font-semibold tracking-tight text-off-white">{title}</h1>
         <p className="mt-3 text-text-2">Connect your work email to get started in minutes.</p>
+
+        {authError && (
+          <p role="alert" className="mt-6 border-l-2 border-danger pl-3 text-sm text-danger">
+            {authError}
+          </p>
+        )}
 
         <div className="mt-10 space-y-3">
           <button

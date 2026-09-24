@@ -141,6 +141,13 @@ export async function getRecordingUrl(botId: string): Promise<{ url: string; kin
   return null;
 }
 
+/** When the bot's recording file actually starts (media t=0), if known. */
+export async function getRecordingStart(botId: string): Promise<string | null> {
+  if (!RECALL_LIVE) return null;
+  const bot = await getBot(botId);
+  return bot.recordings?.find((r) => r.started_at)?.started_at ?? null;
+}
+
 /* -------------------------- lifecycle → call status ------------------------- */
 
 export type BotTransition =

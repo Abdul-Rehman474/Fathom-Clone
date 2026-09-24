@@ -166,6 +166,13 @@ export function RightColumn({
         </div>
       </Panel>
 
+      {/* Scratchpad from the in-meeting overlay (FR-4.2) */}
+      {call.scratchpad?.trim() && (
+        <Panel title="Your notes">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-2">{call.scratchpad}</p>
+        </Panel>
+      )}
+
       {/* Highlights */}
       <Panel title="Highlights">
         <AddHighlight callId={call.id} tags={tags} currentMs={currentMs} onDone={() => router.refresh()} />

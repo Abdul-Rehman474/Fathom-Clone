@@ -25,6 +25,7 @@ export function useTabRecorder() {
   const [state, setState] = useState<RecorderState>('idle');
   const [error, setError] = useState<string | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [micStream, setMicStream] = useState<MediaStream | null>(null);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -41,6 +42,7 @@ export function useTabRecorder() {
     streamsRef.current = [];
     ctxRef.current?.close().catch(() => {});
     ctxRef.current = null;
+    setMicStream(null);
   }, []);
 
   const stop = useCallback((): Promise<TabRecorderResult> => {
@@ -52,22 +54,35 @@ export function useTabRecorder() {
   }, []);
 
   const start = useCallback(
-    async (captureVideo: boolean): Promise<void> => {
+    async (
+      captureVideo: boolean,
+      opts: {
+        onGesture?: () => void;
+        onStarted?: (startedAt: number) => void;
+        /** Fires however recording ends: End, or the browser's "Stop sharing". */
+        onStopped?: (result: TabRecorderResult) => void;
+      } = {},
+    ): Promise<boolean> => {
       setError(null);
       setState('requesting');
       try {
-        const display = await navigator.mediaDevices.getDisplayMedia({
+        const pending = navigator.mediaDevices.getDisplayMedia({
           video: captureVideo ? { frameRate: 15, width: 1280 } : true,
           audio: true,
         });
+        // Still inside the click: anything else that needs the user gesture
+        // (the overlay's Picture-in-Picture window) must run now.
+        opts.onGesture?.();
+        const display = await pending;
         if (display.getAudioTracks().length === 0) {
           display.getTracks().forEach((t) => t.stop());
           setState('error');
           setError('No tab audio was shared. Re-share the tab and tick “Share tab audio”.');
-          return;
+          return false;
         }
         const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
         streamsRef.current = [display, mic];
+        setMicStream(mic);
 
         const ctx = new AudioContext();
         ctxRef.current = ctx;
@@ -97,8 +112,10 @@ export function useTabRecorder() {
           const blob = new Blob(chunksRef.current, { type: mimeType });
           setState('idle');
           setElapsedMs(0);
-          resolveRef.current?.({ blob, durationMs, mimeType, hasVideo: captureVideo });
+          const result = { blob, durationMs, mimeType, hasVideo: captureVideo };
+          resolveRef.current?.(result);
           resolveRef.current = null;
+          opts.onStopped?.(result);
         };
 
         // If the user clicks the browser's "Stop sharing", finish like End.
@@ -112,15 +129,19 @@ export function useTabRecorder() {
         startRef.current = Date.now();
         recorder.start(5000);
         setState('recording');
+        opts.onStarted?.(startRef.current);
         tickRef.current = setInterval(() => setElapsedMs(Date.now() - startRef.current), 250);
+        return true;
       } catch (e) {
         cleanup();
         setState('error');
-        setError(e instanceof Error ? e.message : 'Could not start recording');
+        const cancelled = e instanceof DOMException && e.name === 'NotAllowedError';
+        setError(cancelled ? 'Sharing was cancelled.' : e instanceof Error ? e.message : 'Could not start recording');
+        return false;
       }
     },
     [cleanup, stop],
   );
 
-  return { state, error, elapsedMs, start, stop };
+  return { state, error, elapsedMs, micStream, start, stop };
 }

@@ -3,13 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, Video, Bot, Link2, Loader2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,8 +11,8 @@ import { toast } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { MAX_UPLOAD_BYTES, ACCEPTED_UPLOAD_EXT } from '@/lib/config';
 import { uploadRecording, readMediaDuration } from '@/lib/capture-client';
-import { useTabRecorder, isTabCaptureSupported } from '@/components/capture/use-tab-recorder';
-import { msToClock } from '@/lib/time';
+import { isTabCaptureSupported } from '@/components/capture/use-tab-recorder';
+import { useCaptureSession } from '@/components/capture/session';
 import { parseMeetingUrl, PLATFORM_NAME } from '@/lib/meeting-url';
 import { NotetakerLive } from '@/components/call/notetaker-live';
 
@@ -58,23 +52,40 @@ export function NewMeetingDialog({ children }: { children: React.ReactNode }) {
 /* -------- Create meeting (Google Meet / Zoom) -------- */
 function CreateMeetingPanel() {
   const router = useRouter();
+  const capture = useCaptureSession();
   const [platform, setPlatform] = useState<'google' | 'zoom'>('google');
   const [title, setTitle] = useState('');
   const [autoNote, setAutoNote] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ url: string; callId: string | null; notetaker: 'sent' | 'failed' | 'off' } | null>(null);
+  const [result, setResult] = useState<{
+    url: string;
+    callId: string | null;
+    notetaker: 'sent' | 'failed' | 'off';
+  } | null>(null);
   const [copied, setCopied] = useState(false);
 
   async function create() {
     setBusy(true);
+    const label = platform === 'google' ? 'Google Meet' : 'Zoom';
+    // Open the overlay now, while this click still counts as a user gesture.
+    if (autoNote)
+      capture.beginBot({
+        title: title.trim() || 'New meeting',
+        platformLabel: label,
+      });
     try {
       const res = await fetch('/api/meetings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider: platform, title, sendNotetaker: autoNote }),
+        body: JSON.stringify({
+          provider: platform,
+          title,
+          sendNotetaker: autoNote,
+        }),
       });
       const json = await res.json();
       if (!res.ok) {
+        if (autoNote) capture.dismiss();
         if (json.error === 'not_connected') {
           toast.error(`Connect ${platform === 'google' ? 'Google Meet' : 'Zoom'} in Settings first.`);
         } else {
@@ -83,7 +94,13 @@ function CreateMeetingPanel() {
         return;
       }
       router.refresh();
-      setResult({ url: json.meetingUrl, callId: json.callId, notetaker: json.notetaker ?? 'off' });
+      if (autoNote && json.notetaker === 'sent' && json.callId) capture.attachBot(json.callId);
+      else if (autoNote) capture.failBot('The notetaker couldn’t be sent. Open the call to try again.');
+      setResult({
+        url: json.meetingUrl,
+        callId: json.callId,
+        notetaker: json.notetaker ?? 'off',
+      });
     } finally {
       setBusy(false);
     }
@@ -162,16 +179,25 @@ function CreateMeetingPanel() {
 /* -------- Join with notetaker (Recall bot, PRD FR-3.2) -------- */
 function NotetakerPanel() {
   const router = useRouter();
+  const capture = useCaptureSession();
   const [url, setUrl] = useState('');
   const [title, setTitle] = useState('');
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState<{ callId: string; error: string | null } | null>(null);
+  const [sent, setSent] = useState<{
+    callId: string;
+    error: string | null;
+  } | null>(null);
   const meeting = parseMeetingUrl(url);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
     if (!meeting || busy) return;
     setBusy(true);
+    // Open the overlay inside the click; it shows "Sending…" until the bot exists.
+    capture.beginBot({
+      title: title.trim() || `${PLATFORM_NAME[meeting.platform]} meeting`,
+      platformLabel: PLATFORM_NAME[meeting.platform],
+    });
     try {
       const res = await fetch('/api/notetaker', {
         method: 'POST',
@@ -181,7 +207,13 @@ function NotetakerPanel() {
       const json = await res.json().catch(() => ({}));
       // Refresh so the new call's live row appears behind the dialog.
       if (json.callId) router.refresh();
-      if (json.callId) setSent({ callId: json.callId, error: res.ok ? null : (json.message ?? 'Could not send the notetaker.') });
+      if (json.callId) capture.attachBot(json.callId);
+      if (!res.ok) capture.failBot(json.message ?? 'Could not send the notetaker.');
+      if (json.callId)
+        setSent({
+          callId: json.callId,
+          error: res.ok ? null : (json.message ?? 'Could not send the notetaker.'),
+        });
       else toast.error(json.message ?? 'Could not send the notetaker');
     } finally {
       setBusy(false);
@@ -205,7 +237,9 @@ function NotetakerPanel() {
   return (
     <form onSubmit={send} className="space-y-4" noValidate>
       <div className="space-y-2">
-        <label htmlFor="nt-url" className="micro-label">Meeting link</label>
+        <label htmlFor="nt-url" className="micro-label">
+          Meeting link
+        </label>
         <Input
           id="nt-url"
           value={url}
@@ -215,7 +249,10 @@ function NotetakerPanel() {
           aria-describedby="nt-url-hint"
           autoComplete="off"
         />
-        <p id="nt-url-hint" className={cn('text-xs', url && !meeting ? 'text-danger' : meeting ? 'text-lime' : 'text-text-3')}>
+        <p
+          id="nt-url-hint"
+          className={cn('text-xs', url && !meeting ? 'text-danger' : meeting ? 'text-lime' : 'text-text-3')}
+        >
           {!url
             ? 'Google Meet, Zoom and Microsoft Teams links are supported.'
             : meeting
@@ -240,8 +277,10 @@ function RecordUploadPanel({ onDone }: { onDone: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [captureVideo, setCaptureVideo] = useState(false);
-  const recorder = useTabRecorder();
+  const capture = useCaptureSession();
+  const [starting, setStarting] = useState(false);
   const supported = isTabCaptureSupported();
+  const busyElsewhere = !!capture.session && !['done', 'failed'].includes(capture.session.phase);
 
   async function onFile(file: File) {
     const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
@@ -275,30 +314,13 @@ function RecordUploadPanel({ onDone }: { onDone: () => void }) {
     }
   }
 
+  // The session owns the recorder, so recording carries on after this dialog
+  // closes; the overlay and the status bar show it and end it.
   async function startRecording() {
-    await recorder.start(captureVideo);
-  }
-  async function stopRecording() {
-    try {
-      const result = await recorder.stop();
-      setProgress(5);
-      const callId = await uploadRecording({
-        file: result.blob,
-        ext: 'webm',
-        durationSec: Math.round(result.durationMs / 1000),
-        mediaKind: result.hasVideo ? 'video' : 'audio',
-        source: 'tab',
-        platform: 'browser',
-        title: 'Tab recording',
-        onProgress: setProgress,
-      });
-      toast.success('Recording saved. Processing has started.');
-      onDone();
-      router.push(`/calls/${callId}`);
-    } catch (e) {
-      setProgress(null);
-      toast.error(e instanceof Error ? e.message : 'Could not save recording');
-    }
+    setStarting(true);
+    const ok = await capture.startTab({ captureVideo });
+    setStarting(false);
+    if (ok) onDone();
   }
 
   if (progress !== null) {
@@ -322,13 +344,8 @@ function RecordUploadPanel({ onDone }: { onDone: () => void }) {
         </div>
         {!supported ? (
           <p className="text-sm text-text-3">Tab capture needs Chrome or Edge.</p>
-        ) : recorder.state === 'recording' || recorder.state === 'stopping' ? (
-          <>
-            <p className="font-mono text-sm text-danger tnum">● Recording {msToClock(recorder.elapsedMs)}</p>
-            <Button variant="danger" onClick={stopRecording} disabled={recorder.state === 'stopping'}>
-              End &amp; process
-            </Button>
-          </>
+        ) : busyElsewhere ? (
+          <p className="text-sm text-text-2">A recording is already running. End it from the bar at the top first.</p>
         ) : (
           <>
             <div role="radiogroup" aria-label="Capture mode" className="space-y-1.5">
@@ -344,7 +361,9 @@ function RecordUploadPanel({ onDone }: { onDone: () => void }) {
                   onClick={() => setCaptureVideo(o.v)}
                   className={cn(
                     'flex w-full items-center justify-between rounded-btn border px-3 py-2 text-left text-sm transition-colors',
-                    captureVideo === o.v ? 'border-lime/60 text-off-white' : 'border-border text-text-2 hover:border-border-strong',
+                    captureVideo === o.v
+                      ? 'border-lime/60 text-off-white'
+                      : 'border-border text-text-2 hover:border-border-strong',
                   )}
                 >
                   <span className="flex items-center gap-2">
@@ -363,10 +382,12 @@ function RecordUploadPanel({ onDone }: { onDone: () => void }) {
               ))}
             </div>
             <p className="text-xs text-text-3">Remember to collect attendee consent before recording.</p>
-            <Button onClick={startRecording}>Start recording</Button>
+            <Button onClick={startRecording} disabled={starting}>
+              {starting ? 'Choose the tab to share…' : 'Start recording'}
+            </Button>
           </>
         )}
-        {recorder.error && <p className="text-xs text-danger">{recorder.error}</p>}
+        {capture.recorderError && <p className="text-xs text-danger">{capture.recorderError}</p>}
       </div>
 
       {/* Upload */}

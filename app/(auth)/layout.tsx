@@ -1,16 +1,12 @@
-import { BrandMark } from "@/components/brand";
-import { Toaster } from "@/components/ui/toaster";
-import { BRAND_NAME } from "@/lib/config";
+import { BrandMark } from '@/components/brand';
+import { Toaster } from '@/components/ui/toaster';
+import { BRAND_NAME } from '@/lib/config';
 
 /**
  * Dedicated authentication shell: a split screen, deliberately unlike the
  * marketing hero: form on the left, an editorial brand panel on the right.
  */
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <div className="grid min-h-screen bg-bg-app lg:grid-cols-[1fr_1.05fr]">
@@ -33,15 +29,13 @@ export default function AuthLayout({
             <p className="mt-4 font-display text-4xl font-semibold leading-[1.1] tracking-tight text-lime xl:text-5xl">
               A summary you can send as is.
             </p>
-            <footer className="mt-8 text-sm text-text-3">
-              Plus action items with owners and timestamps.
-            </footer>
+            <footer className="mt-8 text-sm text-text-3">Plus action items with owners and timestamps.</footer>
           </blockquote>
           <div className="grid grid-cols-3 gap-6 border-t border-border pt-8">
             {[
-              ["Meet, Zoom", "and Teams"],
-              ["Speakers", "labelled"],
-              ["Every word", "searchable"],
+              ['Meet, Zoom', 'and Teams'],
+              ['Speakers', 'labelled'],
+              ['Every word', 'searchable'],
             ].map(([a, b]) => (
               <div key={a}>
                 <p className="font-display text-lg font-semibold">{a}</p>

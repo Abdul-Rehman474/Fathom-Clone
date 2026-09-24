@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/client';
 import type { Platform } from '@/lib/types';
 
-async function createCall(input: {
+export async function createCall(input: {
   source: 'upload' | 'tab';
   platform: Platform;
   title?: string;
@@ -18,7 +18,10 @@ async function createCall(input: {
   return id as string;
 }
 
-async function getUploadUrl(callId: string, ext: string): Promise<{ path: string; token: string }> {
+async function getUploadUrl(
+  callId: string,
+  ext: string,
+): Promise<{ path: string; token: string; signedUrl: string }> {
   const res = await fetch(`/api/calls/${callId}/upload-url`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -85,4 +88,31 @@ export async function uploadRecording(params: {
   });
   params.onProgress?.(100);
   return callId;
+}
+
+/**
+ * Upload a finished tab recording into an existing call (the overlay created
+ * the call when recording started), reporting real byte progress.
+ */
+export async function uploadToCall(params: {
+  callId: string;
+  file: Blob;
+  ext: string;
+  durationSec: number;
+  mediaKind: 'audio' | 'video';
+  onProgress?: (pct: number) => void;
+}): Promise<void> {
+  const { path, signedUrl } = await getUploadUrl(params.callId, params.ext);
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', signedUrl);
+    xhr.setRequestHeader('Content-Type', params.file.type || 'application/octet-stream');
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) params.onProgress?.(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => (xhr.status < 300 ? resolve() : reject(new Error(`Upload failed (${xhr.status})`)));
+    xhr.onerror = () => reject(new Error('Upload failed. Check your connection.'));
+    xhr.send(params.file);
+  });
+  await completeCall(params.callId, { path, duration_sec: params.durationSec, media_kind: params.mediaKind });
 }

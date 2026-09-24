@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   createBot,
   getBot,
+  getRecordingStart,
   mapBotCode,
   removeBot,
   failureReason,
@@ -146,8 +147,36 @@ export async function applyBotChange(
     .eq('bot_id', botId)
     .in('status', BOT_ACTIVE)
     .select('id');
-  if (claimed?.length) schedule(() => runPipeline(call.id));
+  if (claimed?.length) {
+    await alignToMedia(db, call.id, call.recording_started_at, botId);
+    schedule(() => runPipeline(call.id));
+  }
   return true;
+}
+
+/**
+ * In-meeting highlights were measured from the "recording" event. If Recall's
+ * file starts at a different moment, shift them so they land on the media
+ * timeline. Runs once, inside the atomic claim above.
+ */
+async function alignToMedia(db: DB, callId: string, recordingStartedAt: string, botId: string) {
+  try {
+    const mediaStart = await getRecordingStart(botId);
+    if (!mediaStart) return;
+    const delta = Date.parse(recordingStartedAt) - Date.parse(mediaStart);
+    if (!Number.isFinite(delta) || Math.abs(delta) < 250) return;
+    const { data: rows } = await db
+      .from('highlights')
+      .select('id, start_ms')
+      .eq('call_id', callId)
+      .neq('source', 'ai');
+    for (const r of rows ?? []) {
+      await db.from('highlights').update({ start_ms: Math.max(0, r.start_ms + delta) }).eq('id', r.id);
+    }
+    await db.from('calls').update({ recording_started_at: mediaStart }).eq('id', callId);
+  } catch {
+    // Alignment is best effort; offsets stay relative to the recording event.
+  }
 }
 
 async function failBot(db: DB, callId: string, botId: string, reason: string) {

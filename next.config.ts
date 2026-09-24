@@ -6,8 +6,9 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   // Share links carry their token in the path; send only the origin elsewhere.
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  // Tab capture and the mic meter need these on our own origin only.
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), display-capture=(self), geolocation=()' },
+  // Camera and microphone are left to the browser's own prompt: screen
+  // recorders such as the Loom extension embed their camera bubble in the page.
+  { key: 'Permissions-Policy', value: 'geolocation=(), payment=(), usb=()' },
 ];
 
 const nextConfig: NextConfig = {

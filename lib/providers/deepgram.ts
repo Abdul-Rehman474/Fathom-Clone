@@ -100,15 +100,15 @@ export async function transcribeNow(mediaUrl: string): Promise<DeepgramResult> {
     method: 'POST',
     headers: { Authorization: `Token ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ url: mediaUrl }),
+    // Pre-recorded transcription runs at many times real time; this covers
+    // multi-hour files and still ends inside the route's 300 s budget.
+    signal: AbortSignal.timeout(240_000),
   });
   if (!res.ok) throw new Error(`Deepgram failed: ${res.status} ${(await res.text()).slice(0, 200)}`);
   return parseDeepgramCallback(await res.json());
 }
 
-export async function submitToDeepgram(params: {
-  callId: string;
-  mediaUrl: string;
-}): Promise<{ requestId: string }> {
+export async function submitToDeepgram(params: { callId: string; mediaUrl: string }): Promise<{ requestId: string }> {
   const key = process.env.DEEPGRAM_API_KEY;
   const site = process.env.NEXT_PUBLIC_SITE_URL;
   const secret = process.env.DEEPGRAM_WEBHOOK_SECRET ?? '';
@@ -123,8 +123,9 @@ export async function submitToDeepgram(params: {
     method: 'POST',
     headers: { Authorization: `Token ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ url: params.mediaUrl }),
+    signal: AbortSignal.timeout(30_000),
   });
-  if (!res.ok) throw new Error(`Deepgram submit failed: ${res.status} ${await res.text()}`);
+  if (!res.ok) throw new Error(`Deepgram submit failed: ${res.status} ${(await res.text()).slice(0, 200)}`);
   const json = (await res.json()) as { request_id?: string };
   return { requestId: json.request_id ?? '' };
 }

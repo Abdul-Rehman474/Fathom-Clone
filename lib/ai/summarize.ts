@@ -1,5 +1,6 @@
 import 'server-only';
 import { groqChat, hasLLM, MODEL_SUMMARY, wrapTranscript } from '@/lib/ai/client';
+import { ZodError } from 'zod';
 import { summarySchema, type SummaryOutput } from '@/lib/ai/schemas';
 import { templateInstruction } from '@/lib/ai/templates';
 import { mockSummary, type Utterance } from '@/lib/providers/mock-fixtures';
@@ -14,9 +15,7 @@ export interface SegmentInput {
 
 /** "[m:ss] Speaker A: text" lines for the model. */
 function transcriptText(segments: SegmentInput[]): string {
-  return segments
-    .map((s) => `[${msToClock(s.start_ms)}] ${s.speaker_label ?? 'Speaker'}: ${s.text}`)
-    .join('\n');
+  return segments.map((s) => `[${msToClock(s.start_ms)}] ${s.speaker_label ?? 'Speaker'}: ${s.text}`).join('\n');
 }
 
 function segmentsToUtterances(segments: SegmentInput[]): Utterance[] {
@@ -76,6 +75,9 @@ export async function summarizeCall(
   try {
     return { summary: await attempt(), model: MODEL_SUMMARY };
   } catch (err) {
+    // Only a malformed answer is worth a second try; a provider error or a
+    // timeout goes straight to the failed state so the user can retry.
+    if (!(err instanceof SyntaxError || err instanceof ZodError)) throw err;
     const summary = await attempt(
       `The previous output was invalid: ${err instanceof Error ? err.message : String(err)}. Return valid JSON matching the schema exactly.`,
     );

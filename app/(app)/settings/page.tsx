@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { connectedIntegrations } from '@/lib/providers/integrations';
 import { getProfileAndSettings } from '@/lib/queries';
 import { SettingsForm } from '@/components/app/settings-form';
 import { VideoConferencing } from '@/components/app/video-conferencing';
@@ -41,15 +42,23 @@ export default async function SettingsPage() {
   const { user, settings } = await getProfileAndSettings();
   const supabase = await createClient();
   const [{ data: tags }, { data: integrations }] = await Promise.all([
-    supabase.from('highlight_tags').select('*').eq('user_id', user?.id ?? '').order('position'),
-    supabase.from('integrations').select('provider, account_email').eq('user_id', user?.id ?? ''),
+    supabase
+      .from('highlight_tags')
+      .select('*')
+      .eq('user_id', user?.id ?? '')
+      .order('position'),
+    connectedIntegrations(supabase, user?.id ?? ''),
   ]);
 
   const initial = { ...DEFAULTS, ...(settings ?? {}) } as UserSettings;
 
   return (
     <div className="mx-auto max-w-5xl">
-      <PageHeading eyebrow="Manage" title="Settings" description="Configure capture, AI summaries, sharing and connections." />
+      <PageHeading
+        eyebrow="Manage"
+        title="Settings"
+        description="Configure capture, AI summaries, sharing and connections."
+      />
 
       <div className="grid gap-12 lg:grid-cols-[180px_1fr]">
         <nav className="hidden lg:block" aria-label="Settings sections">

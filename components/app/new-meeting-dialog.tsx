@@ -83,7 +83,7 @@ function CreateMeetingPanel() {
           sendNotetaker: autoNote,
         }),
       });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (autoNote) capture.dismiss();
         if (json.error === 'not_connected') {
@@ -101,6 +101,9 @@ function CreateMeetingPanel() {
         callId: json.callId,
         notetaker: json.notetaker ?? 'off',
       });
+    } catch {
+      if (autoNote) capture.dismiss();
+      toast.error('That did not go through. Check your connection and try again.');
     } finally {
       setBusy(false);
     }
@@ -215,6 +218,8 @@ function NotetakerPanel() {
           error: res.ok ? null : (json.message ?? 'Could not send the notetaker.'),
         });
       else toast.error(json.message ?? 'Could not send the notetaker');
+    } catch {
+      capture.failBot('The notetaker request did not go through. Check your connection and try again.');
     } finally {
       setBusy(false);
     }

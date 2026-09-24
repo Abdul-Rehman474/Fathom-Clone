@@ -7,13 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { SettingsRow } from '@/components/ui/settings-row';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toaster';
 
 const INTEGRATIONS = ['Claude', 'ChatGPT', 'Zapier', 'Slack', 'Salesforce', 'HubSpot', 'Task Manager'];
@@ -53,8 +47,8 @@ export function IntegrationsSection() {
           <DialogHeader>
             <DialogTitle>{open} is coming soon</DialogTitle>
             <DialogDescription>
-              This integration is presented as UI only in this build. The core capture → transcript
-              → summary → Ask pipeline is fully functional.
+              This integration is presented as UI only in this build. The core capture → transcript → summary → Ask
+              pipeline is fully functional.
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
@@ -72,14 +66,15 @@ export function DangerZone() {
 
   async function del() {
     setBusy(true);
-    const res = await fetch('/api/account/delete', { method: 'POST' });
-    if (res.ok) {
+    const res = await fetch('/api/account/delete', { method: 'POST' }).catch(() => null);
+    if (res?.ok) {
       const supabase = createClient();
       await supabase.auth.signOut();
       router.push('/');
     } else {
       setBusy(false);
-      toast.error('Could not delete account');
+      const json = (await res?.json().catch(() => ({}))) as { message?: string } | undefined;
+      toast.error(json?.message ?? 'Could not delete your account. Check your connection and try again.');
     }
   }
 

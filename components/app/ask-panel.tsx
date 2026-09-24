@@ -4,11 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUp, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const CHIPS = [
-  'Surprise me with an insight',
-  'Any looming deadlines?',
-  'Summarize my meetings from this week',
-];
+const CHIPS = ['Surprise me with an insight', 'Any looming deadlines?', 'Summarize my meetings from this week'];
 
 interface Msg {
   role: 'user' | 'assistant';
@@ -52,8 +48,8 @@ export function AskPanel() {
         body: JSON.stringify({ question, scope }),
       });
       if (!res.ok || !res.body) {
-        const msg = res.status === 429 ? 'Too many questions at once. Try again in a minute.' : 'Ask failed.';
-        setMessages((m) => updateLast(m, msg));
+        const json = (await res.json().catch(() => ({}))) as { message?: string };
+        setMessages((m) => updateLast(m, json.message ?? 'That question did not go through. Try again.'));
         return;
       }
       const reader = res.body.getReader();
@@ -66,7 +62,7 @@ export function AskPanel() {
         setMessages((m) => updateLast(m, acc));
       }
     } catch {
-      setMessages((m) => updateLast(m, 'Something went wrong.'));
+      setMessages((m) => updateLast(m, 'The answer was cut off. Check your connection and ask again.'));
     } finally {
       setBusy(false);
     }
@@ -89,7 +85,11 @@ export function AskPanel() {
         <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-off-white">
           <span className="rec-dot size-1.5 rounded-full bg-lime" /> Ask Fathom
         </span>
-        <button onClick={() => setOpen(false)} className="text-text-3 hover:text-text-1" aria-label="Collapse Ask panel">
+        <button
+          onClick={() => setOpen(false)}
+          className="text-text-3 hover:text-text-1"
+          aria-label="Collapse Ask panel"
+        >
           <PanelRightClose className="size-4" />
         </button>
       </div>
@@ -110,7 +110,10 @@ export function AskPanel() {
         ) : (
           messages.map((m, i) =>
             m.role === 'user' ? (
-              <div key={i} className="ml-auto w-fit max-w-[90%] rounded-btn bg-surface-2 px-3 py-2 text-sm text-off-white">
+              <div
+                key={i}
+                className="ml-auto w-fit max-w-[90%] rounded-btn bg-surface-2 px-3 py-2 text-sm text-off-white"
+              >
                 {m.text}
               </div>
             ) : (

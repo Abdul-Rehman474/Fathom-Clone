@@ -34,12 +34,14 @@ async function recall<T>(path: string, init: RequestInit = {}): Promise<T> {
       ...init.headers,
     },
     cache: 'no-store',
+    signal: AbortSignal.timeout(20_000),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     throw new RecallError(res.status, text.slice(0, 300));
   }
-  return (await res.json()) as T;
+  const text = await res.text();
+  return (text ? JSON.parse(text) : {}) as T;
 }
 
 export class RecallError extends Error {
@@ -49,6 +51,17 @@ export class RecallError extends Error {
   ) {
     super(`Recall ${status}: ${body}`);
   }
+}
+
+/** A sentence for the UI when sending or removing the bot fails. Raw Recall text stays server side. */
+export function notetakerErrorMessage(e: unknown): string {
+  if (e instanceof NotetakerUnavailableError) return e.message;
+  if (e instanceof RecallError) {
+    if (e.status === 400 && /meeting_url/i.test(e.body)) return 'The notetaker could not use that meeting link.';
+    if (e.status === 429) return 'The notetaker service is busy. Try again in a minute.';
+    if (e.status === 401 || e.status === 403) return 'The notetaker service rejected this server’s key.';
+  }
+  return 'The notetaker service did not respond. Try again in a minute.';
 }
 
 export interface RecallStatusChange {
@@ -141,6 +154,18 @@ export async function getRecordingUrl(botId: string): Promise<{ url: string; kin
   return null;
 }
 
+/** Permanently delete a bot's recordings at Recall (account deletion). */
+export async function deleteBotMedia(botId: string): Promise<void> {
+  if (!RECALL_LIVE) return;
+  try {
+    await recall(`/bot/${botId}/delete_media/`, { method: 'POST' });
+  } catch (e) {
+    // 404: the bot or its media is already gone.
+    if (e instanceof RecallError && e.status === 404) return;
+    throw e;
+  }
+}
+
 /** When the bot's recording file actually starts (media t=0), if known. */
 export async function getRecordingStart(botId: string): Promise<string | null> {
   if (!RECALL_LIVE) return null;
@@ -159,7 +184,8 @@ export type BotTransition =
 /** Human-readable failure reasons for Recall sub codes (PRD FR-3.2). */
 const REASONS: Record<string, string> = {
   timeout_exceeded_waiting_room: 'The notetaker was not admitted from the waiting room in time.',
-  call_ended_by_platform_waiting_room_timeout: 'The notetaker was not admitted before the meeting platform’s waiting-room limit.',
+  call_ended_by_platform_waiting_room_timeout:
+    'The notetaker was not admitted before the meeting platform’s waiting-room limit.',
   bot_kicked_from_waiting_room: 'The host declined the notetaker in the waiting room.',
   bot_kicked_from_call: 'The notetaker was removed from the meeting by the host.',
   call_ended_by_host: 'The host ended the meeting.',
@@ -182,7 +208,10 @@ const REASONS: Record<string, string> = {
   zoom_meeting_not_accessible: 'The Zoom meeting isn’t accessible to external participants.',
 };
 
-export function failureReason(subCode: string | null | undefined, fallback = 'The notetaker could not record this meeting.'): string {
+export function failureReason(
+  subCode: string | null | undefined,
+  fallback = 'The notetaker could not record this meeting.',
+): string {
   return (subCode && REASONS[subCode]) || fallback;
 }
 

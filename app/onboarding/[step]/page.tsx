@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { connectedIntegrations } from '@/lib/providers/integrations';
 import { StepShell } from '@/components/onboarding/step-shell';
 import {
   AccountTypeStep,
@@ -22,11 +23,7 @@ const STEP_LABELS: Record<OnboardingStep, string> = {
 
 const PERSONAL_DOMAINS = ['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com', 'proton.me', 'aol.com'];
 
-export default async function OnboardingStepPage({
-  params,
-}: {
-  params: Promise<{ step: string }>;
-}) {
+export default async function OnboardingStepPage({ params }: { params: Promise<{ step: string }> }) {
   const { step: slug } = await params;
   if (!ONBOARDING_STEPS.includes(slug as OnboardingStep)) {
     redirect('/onboarding/account-type');
@@ -38,11 +35,7 @@ export default async function OnboardingStepPage({
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .maybeSingle();
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
   if (profile?.onboarding_done) redirect('/calls');
 
   const { data: settings } = await supabase
@@ -51,10 +44,7 @@ export default async function OnboardingStepPage({
     .eq('user_id', user.id)
     .maybeSingle();
 
-  const { data: integrations } = await supabase
-    .from('integrations')
-    .select('provider, account_email')
-    .eq('user_id', user.id);
+  const { data: integrations } = await connectedIntegrations(supabase, user.id);
 
   const email = user.email ?? profile?.email ?? '';
   const stepNum = slugStep(slug);
@@ -65,17 +55,12 @@ export default async function OnboardingStepPage({
   return (
     <StepShell step={stepNum} label={label} email={email}>
       {slug === 'account-type' && (
-        <AccountTypeStep
-          email={email}
-          isPersonalEmail={PERSONAL_DOMAINS.includes(email.split('@')[1] ?? '')}
-        />
+        <AccountTypeStep email={email} isPersonalEmail={PERSONAL_DOMAINS.includes(email.split('@')[1] ?? '')} />
       )}
       {slug === 'preferences' && (
         <PreferencesStep notesOn={settings?.notes_on ?? 'all'} shareWith={settings?.share_with ?? 'all'} />
       )}
-      {slug === 'about-you' && (
-        <AboutYouStep department={profile?.department ?? ''} role={profile?.role ?? ''} />
-      )}
+      {slug === 'about-you' && <AboutYouStep department={profile?.department ?? ''} role={profile?.role ?? ''} />}
       {slug === 'usage' && <UsageStep usage={profile?.usage ?? ''} />}
       {slug === 'connect' && (
         <ConnectStep

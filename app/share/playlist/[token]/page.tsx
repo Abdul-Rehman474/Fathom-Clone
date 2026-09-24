@@ -12,7 +12,7 @@ export default async function SharePlaylistPage({ params }: { params: Promise<{ 
 
   const { data: playlist } = await admin
     .from('playlists')
-    .select('id, title, description')
+    .select('id, title, description, owner_id')
     .eq('share_token', token)
     .maybeSingle();
 
@@ -33,15 +33,32 @@ export default async function SharePlaylistPage({ params }: { params: Promise<{ 
     .select('position, highlights(id, call_id, start_ms, note)')
     .eq('playlist_id', playlist.id)
     .order('position');
-  const clips = (items ?? [])
-    .map((i) => (i as unknown as { highlights: { id: string; call_id: string; start_ms: number; note: string | null } }).highlights)
+  const allClips = (items ?? [])
+    .map(
+      (i) =>
+        (i as unknown as { highlights: { id: string; call_id: string; start_ms: number; note: string | null } })
+          .highlights,
+    )
     .filter(Boolean);
-  const callIds = [...new Set(clips.map((c) => c.call_id))];
+  const callIds = [...new Set(allClips.map((c) => c.call_id))];
   const { data: calls } = await admin
     .from('calls')
-    .select('id, title')
+    .select('id, title, owner_id, visibility, workspace_id')
     .in('id', callIds.length ? callIds : ['00000000-0000-0000-0000-000000000000']);
-  const callTitle = new Map((calls ?? []).map((c) => [c.id, c.title]));
+  // This page runs with the service role, so re-apply the owner's view: only
+  // clips from calls the playlist owner can see are shown.
+  const { data: memberships } = await admin
+    .from('workspace_members')
+    .select('workspace_id')
+    .eq('user_id', playlist.owner_id);
+  const ownerWorkspaces = new Set((memberships ?? []).map((m) => m.workspace_id));
+  const visible = (calls ?? []).filter(
+    (c) =>
+      c.owner_id === playlist.owner_id ||
+      (c.visibility === 'workspace' && c.workspace_id != null && ownerWorkspaces.has(c.workspace_id)),
+  );
+  const callTitle = new Map(visible.map((c) => [c.id, c.title]));
+  const clips = allClips.filter((c) => callTitle.has(c.call_id));
 
   return (
     <div className="min-h-screen bg-bg-app">

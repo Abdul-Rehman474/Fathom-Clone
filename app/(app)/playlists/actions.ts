@@ -14,15 +14,21 @@ async function requireUser() {
   return { supabase, user };
 }
 
+/** RLS answers this: a highlight is visible only if its call is. */
+async function canSeeHighlight(supabase: Awaited<ReturnType<typeof createClient>>, highlightId: string) {
+  const { data } = await supabase.from('highlights').select('id').eq('id', highlightId).maybeSingle();
+  return !!data;
+}
+
 export async function createPlaylist(formData: FormData) {
-  const title = z.string().min(1).max(120).parse(formData.get('title') || 'New playlist');
+  const title = z
+    .string()
+    .min(1)
+    .max(120)
+    .parse(formData.get('title') || 'New playlist');
   const { supabase, user } = await requireUser();
   if (!user) redirect('/login');
-  const { data } = await supabase
-    .from('playlists')
-    .insert({ owner_id: user.id, title })
-    .select('id')
-    .single();
+  const { data } = await supabase.from('playlists').insert({ owner_id: user.id, title }).select('id').single();
   revalidatePath('/playlists');
   if (data) redirect(`/playlists/${data.id}`);
 }
@@ -30,9 +36,13 @@ export async function createPlaylist(formData: FormData) {
 export async function renamePlaylist(id: string, title: string, description?: string) {
   const { supabase, user } = await requireUser();
   if (!user) return { ok: false };
+  const fields = z
+    .object({ title: z.string().min(1).max(120), description: z.string().max(500).optional() })
+    .safeParse({ title, description });
+  if (!fields.success) return { ok: false };
   await supabase
     .from('playlists')
-    .update({ title, description: description ?? null })
+    .update({ title: fields.data.title, description: fields.data.description ?? null })
     .eq('id', id)
     .eq('owner_id', user.id);
   revalidatePath(`/playlists/${id}`);
@@ -48,7 +58,7 @@ export async function deletePlaylist(id: string) {
 
 export async function addToPlaylist(playlistId: string, highlightId: string) {
   const { supabase, user } = await requireUser();
-  if (!user) return { ok: false };
+  if (!user || !(await canSeeHighlight(supabase, highlightId))) return { ok: false };
   const { count } = await supabase
     .from('playlist_items')
     .select('highlight_id', { count: 'exact', head: true })
@@ -62,10 +72,12 @@ export async function addToPlaylist(playlistId: string, highlightId: string) {
 
 export async function createPlaylistWithHighlight(title: string, highlightId: string) {
   const { supabase, user } = await requireUser();
-  if (!user) return { ok: false };
+  if (!user || !(await canSeeHighlight(supabase, highlightId))) return { ok: false };
+  const name = z.string().min(1).max(120).safeParse(title);
+  if (!name.success) return { ok: false };
   const { data } = await supabase
     .from('playlists')
-    .insert({ owner_id: user.id, title })
+    .insert({ owner_id: user.id, title: name.data })
     .select('id')
     .single();
   if (data) {
@@ -79,11 +91,7 @@ export async function removeFromPlaylist(playlistId: string, highlightId: string
   const { supabase, user } = await requireUser();
   if (!user) return { ok: false };
   // Ownership enforced via RLS (playlist owner).
-  await supabase
-    .from('playlist_items')
-    .delete()
-    .eq('playlist_id', playlistId)
-    .eq('highlight_id', highlightId);
+  await supabase.from('playlist_items').delete().eq('playlist_id', playlistId).eq('highlight_id', highlightId);
   revalidatePath(`/playlists/${playlistId}`);
   return { ok: true };
 }

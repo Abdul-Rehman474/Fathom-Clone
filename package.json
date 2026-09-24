@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "check:notetaker": "node scripts/run-ts.mjs scripts/check-notetaker.ts"
+    "check:notetaker": "node scripts/run-ts.mjs scripts/check-notetaker.ts",
+    "check:security": "node scripts/run-ts.mjs scripts/check-security.ts"
   },
   "dependencies": {
     "@deepgram/sdk": "^5.12.0",

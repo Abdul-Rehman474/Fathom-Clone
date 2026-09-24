@@ -35,16 +35,22 @@ export function SummaryTab({
 
   async function regenerate(newTemplate: string) {
     setBusy(true);
-    const res = await fetch(`/api/calls/${callId}/summarize`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ template: newTemplate }),
-    });
-    setBusy(false);
-    if (res.ok) {
-      toast.success('Regenerating summary…');
-      setTimeout(() => router.refresh(), 3500);
-    } else toast.error('Could not regenerate');
+    try {
+      const res = await fetch(`/api/calls/${callId}/summarize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ template: newTemplate }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { message?: string };
+      if (res.ok) {
+        toast.success('Regenerating summary…');
+        setTimeout(() => router.refresh(), 3500);
+      } else toast.error(json.message ?? 'Could not regenerate. Try again.');
+    } catch {
+      toast.error('That did not go through. Check your connection.');
+    } finally {
+      setBusy(false);
+    }
   }
 
   function copyMarkdown() {
@@ -179,11 +185,19 @@ function toMarkdown(c: SummaryContent): string {
     lines.push('## Key takeaways', ...c.key_takeaways.map((t) => `- ${t}`), '');
   }
   c.topics.forEach((t) => {
-    lines.push(`## ${t.title}`, ...t.bullets.map((b) => `- ${b.text}${b.start_ms != null ? ` (${msToClock(b.start_ms)})` : ''}`), '');
+    lines.push(
+      `## ${t.title}`,
+      ...t.bullets.map((b) => `- ${b.text}${b.start_ms != null ? ` (${msToClock(b.start_ms)})` : ''}`),
+      '',
+    );
   });
   if (c.decisions.length) lines.push('## Decisions', ...c.decisions.map((d) => `- ${d.text}`), '');
   if (c.action_items.length)
-    lines.push('## Action items', ...c.action_items.map((a) => `- ${a.text}${a.assignee ? ` (${a.assignee})` : ''}`), '');
+    lines.push(
+      '## Action items',
+      ...c.action_items.map((a) => `- ${a.text}${a.assignee ? ` (${a.assignee})` : ''}`),
+      '',
+    );
   if (c.next_steps.length) lines.push('## Next steps', ...c.next_steps.map((t) => `- ${t}`), '');
   if (c.questions.length) lines.push('## Questions', ...c.questions.map((t) => `- ${t}`), '');
   return lines.join('\n');

@@ -3,27 +3,43 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Per-user, per-minute rate limit for the Ask endpoints (architecture.md §11).
- * In-memory sliding window: good enough per instance; Prompt 6 hardens this
- * into a durable DB counter. Never throws.
+ * The count lives in Postgres (`bump_rate_limit`, migration 0005), so it holds
+ * across server instances and restarts. If that function is not installed yet
+ * the limiter falls back to an in-memory window rather than letting every
+ * request through. Never throws.
  */
 const buckets = new Map<string, number[]>();
 
+function memoryLimit(id: string, perMinute: number): boolean {
+  const now = Date.now();
+  const hits = (buckets.get(id) ?? []).filter((t) => t > now - 60_000);
+  const ok = hits.length < perMinute;
+  if (ok) hits.push(now);
+  buckets.set(id, hits);
+  return ok;
+}
+
 export async function checkRateLimit(
-  _supabase: SupabaseClient,
+  supabase: SupabaseClient,
   userId: string,
   key: string,
   perMinute: number,
-): Promise<{ ok: boolean; remaining: number }> {
-  void _supabase;
-  const now = Date.now();
-  const windowStart = now - 60_000;
-  const id = `${key}:${userId}`;
-  const hits = (buckets.get(id) ?? []).filter((t) => t > windowStart);
-  if (hits.length >= perMinute) {
-    buckets.set(id, hits);
-    return { ok: false, remaining: 0 };
-  }
-  hits.push(now);
-  buckets.set(id, hits);
-  return { ok: true, remaining: perMinute - hits.length };
+): Promise<{ ok: boolean }> {
+  const { data, error } = await supabase.rpc('bump_rate_limit', { p_bucket: key, p_limit: perMinute });
+  if (!error && typeof data === 'boolean') return { ok: data };
+  return { ok: memoryLimit(`${key}:${userId}`, perMinute) };
 }
+
+/** For anonymous endpoints (the help bot): keyed by client address. */
+export function checkAnonRateLimit(key: string, ip: string, perMinute: number): { ok: boolean } {
+  return { ok: memoryLimit(`${key}:ip:${ip}`, perMinute) };
+}
+
+/** The response every limited endpoint returns. */
+export const RATE_LIMITED = {
+  body: {
+    error: 'rate_limited',
+    message: 'You’re asking questions faster than we can answer. Wait a minute and try again.',
+  },
+  init: { status: 429, headers: { 'Retry-After': '60' } },
+} as const;

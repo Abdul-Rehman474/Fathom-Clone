@@ -3,7 +3,11 @@ import { after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { syncBot, BOT_ACTIVE } from '@/lib/bot/lifecycle';
+import { describeFailure } from '@/lib/pipeline/errors';
 import type { CallStatus } from '@/lib/types';
+
+// A `done` found by polling starts transcription after the reply.
+export const maxDuration = 300;
 
 const COLS = 'id, status, source, bot_id, error, failed_stage, recording_started_at';
 
@@ -33,7 +37,14 @@ export async function GET(_request: NextRequest, ctx: { params: Promise<{ id: st
   }
   return NextResponse.json({
     status: call!.status,
-    error: call!.error,
+    // Bot failure reasons are already written for people; pipeline errors
+    // are raw provider text, so only their plain description goes out.
+    error:
+      call!.status !== 'failed'
+        ? null
+        : call!.failed_stage === 'bot'
+          ? call!.error
+          : describeFailure(call!.failed_stage, call!.error).cause,
     failedStage: call!.failed_stage,
     recordingStartedAt: call!.recording_started_at,
   });

@@ -36,24 +36,25 @@ export function NotetakerLive({
   const { status, error } = live;
   const head = botHeadline(status);
   const failed = status === 'failed';
-  const inMeeting = status === 'joining' || status === 'waiting_admit' || status === 'recording' || status === 'scheduled';
+  const inMeeting =
+    status === 'joining' || status === 'waiting_admit' || status === 'recording' || status === 'scheduled';
 
   async function retry() {
     setBusy('retry');
-    const res = await fetch(`/api/calls/${callId}/retry`, { method: 'POST' });
+    const res = await fetch(`/api/calls/${callId}/retry`, { method: 'POST' }).catch(() => null);
     setBusy(null);
-    if (res.ok) {
+    if (res?.ok) {
       toast.success('Notetaker sent again');
       setLive({ status: 'joining', error: null, failedStage: null });
-    } else toast.error('Could not send the notetaker. Try again.');
+    } else toast.error((await messageOf(res)) ?? 'Could not send the notetaker. Try again.');
   }
 
   async function remove() {
     setBusy('remove');
-    const res = await fetch(`/api/calls/${callId}/notetaker`, { method: 'DELETE' });
+    const res = await fetch(`/api/calls/${callId}/notetaker`, { method: 'DELETE' }).catch(() => null);
     setBusy(null);
-    if (res.ok) toast.success('Notetaker is leaving the meeting');
-    else toast.error('Could not remove the notetaker');
+    if (res?.ok) toast.success('Notetaker is leaving the meeting');
+    else toast.error((await messageOf(res)) ?? 'Could not remove the notetaker. Try again.');
   }
 
   return (
@@ -98,7 +99,10 @@ export function NotetakerLive({
           </Button>
         )}
         {variant === 'dialog' ? (
-          <Link href={`/calls/${callId}`} className="inline-flex h-10 items-center px-2 text-sm text-lime hover:underline">
+          <Link
+            href={`/calls/${callId}`}
+            className="inline-flex h-10 items-center px-2 text-sm text-lime hover:underline"
+          >
             Open call →
           </Link>
         ) : (
@@ -109,4 +113,10 @@ export function NotetakerLive({
       </div>
     </div>
   );
+}
+
+async function messageOf(res: Response | null): Promise<string | undefined> {
+  if (!res) return 'That did not go through. Check your connection.';
+  const json = (await res.json().catch(() => ({}))) as { message?: string };
+  return json.message;
 }

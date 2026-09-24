@@ -2,7 +2,12 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 
-const bodySchema = z.object({ ext: z.string().regex(/^[a-z0-9]{2,5}$/i).default('webm') });
+const bodySchema = z.object({
+  ext: z
+    .string()
+    .regex(/^[a-z0-9]{2,5}$/i)
+    .default('webm'),
+});
 
 /**
  * Returns a Supabase signed upload URL so the browser uploads directly to
@@ -23,12 +28,17 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     return NextResponse.json({ error: 'not_found' }, { status: 404 });
   }
 
-  const { ext } = bodySchema.parse(await request.json().catch(() => ({})));
+  const parsed = bodySchema.safeParse(await request.json().catch(() => ({})));
+  if (!parsed.success) return NextResponse.json({ error: 'invalid_body' }, { status: 400 });
+  const { ext } = parsed.data;
   const path = `${user.id}/${id}.${ext}`;
 
   const { data, error } = await supabase.storage.from('recordings').createSignedUploadUrl(path);
   if (error || !data) {
-    return NextResponse.json({ error: error?.message ?? 'sign_failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'sign_failed', message: 'The upload could not be prepared. Try again.' },
+      { status: 500 },
+    );
   }
   return NextResponse.json({ path, token: data.token, signedUrl: data.signedUrl });
 }

@@ -4,6 +4,9 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { runPipeline } from '@/lib/pipeline/process';
 
+// Transcription and the summary run after the response; give them room.
+export const maxDuration = 300;
+
 const bodySchema = z.object({
   path: z.string().min(1),
   duration_sec: z.number().int().nonnegative().optional(),
@@ -30,8 +33,13 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   const parsed = bodySchema.safeParse(await request.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: 'invalid_body' }, { status: 400 });
   const { path, duration_sec, media_kind } = parsed.data;
+  if (!path.startsWith(`${user.id}/${id}.`)) {
+    return NextResponse.json({ error: 'invalid_path' }, { status: 400 });
+  }
 
-  await supabase
+  // Only the first completion starts the pipeline: a repeated request (client
+  // retry, double submit) finds the call already past uploading and stops.
+  const { data: claimed } = await supabase
     .from('calls')
     .update({
       media_path: path,
@@ -39,7 +47,10 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       duration_sec: duration_sec ?? null,
       status: 'transcribing',
     })
-    .eq('id', id);
+    .eq('id', id)
+    .in('status', ['recording', 'uploading'])
+    .select('id');
+  if (!claimed?.length) return NextResponse.json({ ok: true, already: true });
 
   after(async () => {
     await runPipeline(id);

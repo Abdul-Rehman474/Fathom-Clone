@@ -3,8 +3,19 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { encryptToken, decryptToken } from '@/lib/crypto';
 import { googleRefresh, type TokenSet } from '@/lib/providers/google-meet';
 import { zoomRefresh } from '@/lib/providers/zoom';
+import { MOCK_PROVIDERS } from '@/lib/config';
 
 export type MeetingProvider = 'google' | 'zoom';
+
+/**
+ * The user's working connections. A row with no stored token (left over from
+ * mock mode) is not a connection, so it is never shown as "Connected".
+ */
+export async function connectedIntegrations(supabase: SupabaseClient, userId: string) {
+  let q = supabase.from('integrations').select('provider, account_email').eq('user_id', userId);
+  if (!MOCK_PROVIDERS) q = q.not('access_token_enc', 'is', null);
+  return q;
+}
 
 /** Persist an OAuth token set (encrypted) for a user + provider. */
 export async function storeTokens(

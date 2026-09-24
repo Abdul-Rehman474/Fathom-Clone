@@ -13,8 +13,9 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ provide
 
   const code = request.nextUrl.searchParams.get('code');
   const state = request.nextUrl.searchParams.get('state');
-  const cookieState = request.cookies.get(`oauth_state_${provider}`)?.value;
-  const next = request.cookies.get(`oauth_next_${provider}`)?.value ?? '/settings';
+  const [cookieState, stateUser] = (request.cookies.get(`oauth_state_${provider}`)?.value ?? '').split('.');
+  const rawNext = request.cookies.get(`oauth_next_${provider}`)?.value ?? '';
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('\\') ? rawNext : '/settings';
 
   const fail = (reason: string) => {
     const back = new URL(next, request.url);
@@ -29,6 +30,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ provide
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.redirect(new URL('/login', request.url));
+  if (stateUser !== user.id) return fail('state_mismatch');
 
   try {
     if (provider === 'google') {
@@ -41,7 +43,8 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ provide
       await storeTokens(supabase, user.id, 'zoom', tokens, email);
     }
   } catch (e) {
-    return fail(e instanceof Error ? e.message.slice(0, 60) : 'exchange_failed');
+    console.error('oauth exchange failed', e);
+    return fail('exchange_failed');
   }
 
   const back = new URL(next, request.url);

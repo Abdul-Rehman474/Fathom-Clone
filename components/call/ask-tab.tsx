@@ -28,7 +28,8 @@ export function AskTab({ callId, onSeek }: { callId: string; onSeek: (ms: number
         body: JSON.stringify({ question }),
       });
       if (!res.ok || !res.body) {
-        setMessages((m) => setLast(m, 'Sorry, that failed.'));
+        const json = (await res.json().catch(() => ({}))) as { message?: string };
+        setMessages((m) => setLast(m, json.message ?? 'That question did not go through. Try again.'));
         return;
       }
       const reader = res.body.getReader();
@@ -40,6 +41,8 @@ export function AskTab({ callId, onSeek }: { callId: string; onSeek: (ms: number
         acc += dec.decode(value, { stream: true });
         setMessages((m) => setLast(m, acc));
       }
+    } catch {
+      setMessages((m) => setLast(m, 'The answer was cut off. Check your connection and ask again.'));
     } finally {
       setBusy(false);
     }
@@ -63,7 +66,10 @@ export function AskTab({ callId, onSeek }: { callId: string; onSeek: (ms: number
         <div className="space-y-3">
           {messages.map((m, i) =>
             m.role === 'user' ? (
-              <div key={i} className="ml-auto w-fit max-w-[85%] rounded-btn bg-surface-2 px-3 py-2 text-sm text-off-white">
+              <div
+                key={i}
+                className="ml-auto w-fit max-w-[85%] rounded-btn bg-surface-2 px-3 py-2 text-sm text-off-white"
+              >
                 {m.text}
               </div>
             ) : (

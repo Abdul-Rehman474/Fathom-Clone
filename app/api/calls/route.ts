@@ -40,7 +40,10 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ error: error?.message ?? 'insert_failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'insert_failed', message: 'The call could not be created. Try again.' },
+      { status: 500 },
+    );
   }
   return NextResponse.json({ id: data.id });
 }

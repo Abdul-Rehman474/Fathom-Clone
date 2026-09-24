@@ -73,7 +73,7 @@ All converge on one `calls` record and one pipeline.
 ## Local setup
 
 1. Create a Supabase project. In the SQL editor, run **`supabase/schema.sql`**
-   (or the four `supabase/migrations/000*.sql` in order).
+   (or the five `supabase/migrations/000*.sql` in order).
 2. Supabase → Auth → enable **Google**; add redirect
    `http://localhost:3000/auth/callback` (+ your prod URL).
 3. `cp .env.example .env.local` and fill `NEXT_PUBLIC_SUPABASE_URL`,
@@ -98,6 +98,7 @@ Full key list and security notes: **`docs/SETUP.md`**.
 - `npm run typecheck`: `tsc --noEmit`
 - `npm run lint`: ESLint
 - `npm run check:notetaker`: offline checks: meeting-link validation, Recall webhook signatures, lifecycle mapping
+- `npm run check:security`: offline checks: prompt-injection wrapping, token encryption, failure messages, rate limit (see `docs/security-audit.md`)
 
 ## Security
 

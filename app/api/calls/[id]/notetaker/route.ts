@@ -3,7 +3,11 @@ import { after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { removeNotetaker, sendNotetaker, syncBot, BOT_ACTIVE } from '@/lib/bot/lifecycle';
+import { notetakerErrorMessage } from '@/lib/providers/recall';
 import type { CallStatus } from '@/lib/types';
+
+// Removing the bot can finish the call, which starts transcription after the reply.
+export const maxDuration = 300;
 
 async function ownedBotCall(id: string) {
   const supabase = await createClient();
@@ -28,16 +32,28 @@ export async function POST(_request: NextRequest, ctx: { params: Promise<{ id: s
   const { call, error } = await ownedBotCall(id);
   if (error) return error;
   if (!call.meeting_url) return NextResponse.json({ error: 'no_link' }, { status: 400 });
-  if (['joining', 'waiting_admit', 'recording'].includes(call.status)) {
-    return NextResponse.json({ error: 'already_active' }, { status: 409 });
+  const db = createAdminClient();
+  // Claim the call first so two clicks cannot send two bots.
+  const { data: claimed } = await db
+    .from('calls')
+    .update({ status: 'joining', error: null })
+    .eq('id', id)
+    .eq('status', call.status)
+    .in('status', ['scheduled', 'failed'])
+    .select('id');
+  if (!claimed?.length) {
+    return NextResponse.json(
+      { error: 'already_active', message: 'A notetaker is already on its way.' },
+      { status: 409 },
+    );
   }
   try {
-    await sendNotetaker(createAdminClient(), id);
+    await sendNotetaker(db, id);
   } catch (e) {
-    return NextResponse.json(
-      { error: 'send_failed', message: e instanceof Error ? e.message.slice(0, 200) : 'failed' },
-      { status: 502 },
-    );
+    console.error('notetaker send failed', e);
+    const message = notetakerErrorMessage(e);
+    await db.from('calls').update({ status: 'failed', failed_stage: 'bot', error: message }).eq('id', id);
+    return NextResponse.json({ error: 'send_failed', message }, { status: 502 });
   }
   return NextResponse.json({ ok: true, status: 'joining' });
 }
@@ -54,10 +70,8 @@ export async function DELETE(_request: NextRequest, ctx: { params: Promise<{ id:
   try {
     await removeNotetaker(db, id);
   } catch (e) {
-    return NextResponse.json(
-      { error: 'remove_failed', message: e instanceof Error ? e.message.slice(0, 200) : 'failed' },
-      { status: 502 },
-    );
+    console.error('notetaker remove failed', e);
+    return NextResponse.json({ error: 'remove_failed', message: notetakerErrorMessage(e) }, { status: 502 });
   }
   await syncBot(db, id, (fn) => after(fn)).catch(() => {});
   return NextResponse.json({ ok: true });

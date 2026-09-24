@@ -6,9 +6,18 @@ import { createClient } from '@/lib/supabase/server';
 import { CallView } from '@/components/call/call-view';
 import { StatusPoller } from '@/components/call/status-poller';
 import { RetryButton } from '@/components/call/retry-button';
+import { describeFailure } from '@/lib/pipeline/errors';
 import { NotetakerLive } from '@/components/call/notetaker-live';
 import { isTerminal } from '@/lib/pipeline/status';
-import type { Call, SummaryContent, TranscriptSegment, Attendee, ActionItem, Highlight, HighlightTag } from '@/lib/types';
+import type {
+  Call,
+  SummaryContent,
+  TranscriptSegment,
+  Attendee,
+  ActionItem,
+  Highlight,
+  HighlightTag,
+} from '@/lib/types';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -34,10 +43,7 @@ export default async function CallPage({ params }: { params: Promise<{ id: strin
     return (
       <div className="mx-auto max-w-lg py-20">
         <p className="mb-2 truncate text-sm text-text-3">{c.title ?? 'Meeting'}</p>
-        <NotetakerLive
-          callId={c.id}
-          initial={{ status: c.status, error: c.error, failedStage: c.failed_stage }}
-        />
+        <NotetakerLive callId={c.id} initial={{ status: c.status, error: c.error, failedStage: c.failed_stage }} />
       </div>
     );
   }
@@ -46,7 +52,10 @@ export default async function CallPage({ params }: { params: Promise<{ id: strin
   if (!isTerminal(c.status)) {
     const steps = [
       { label: 'Recorded', state: 'done' },
-      { label: 'Transcribing', state: c.status === 'transcribing' ? 'active' : c.status === 'summarizing' ? 'done' : 'todo' },
+      {
+        label: 'Transcribing',
+        state: c.status === 'transcribing' ? 'active' : c.status === 'summarizing' ? 'done' : 'todo',
+      },
       { label: 'Summarizing', state: c.status === 'summarizing' ? 'active' : 'todo' },
     ] as const;
     return (
@@ -73,14 +82,15 @@ export default async function CallPage({ params }: { params: Promise<{ id: strin
     );
   }
   if (c.status === 'failed') {
-    const stage = c.failed_stage === 'summarizing' ? 'the summary step' : 'transcription';
+    const failure = describeFailure(c.failed_stage, c.error);
     return (
       <div className="mx-auto max-w-lg py-20">
         <p className="micro-label mb-3 !text-danger">Processing stopped</p>
         <h1 className="font-display text-3xl font-semibold tracking-tight">We couldn’t process this recording.</h1>
-        <p className="mt-3 text-text-2">Something went wrong during {stage}. Retrying resumes from that step.</p>
+        <p className="mt-3 text-off-white">{failure.cause}</p>
+        <p className="mt-1 text-text-2">{failure.hint}</p>
         <div className="mt-8 flex gap-3">
-          <RetryButton callId={c.id} />
+          {failure.retryable && <RetryButton callId={c.id} />}
           <Link href="/calls" className="inline-flex h-10 items-center px-4 text-sm text-text-2 hover:text-off-white">
             Back to My Calls
           </Link>
@@ -95,8 +105,16 @@ export default async function CallPage({ params }: { params: Promise<{ id: strin
     supabase.from('attendees').select('*').eq('call_id', id),
     supabase.from('action_items').select('*').eq('call_id', id).order('position'),
     supabase.from('highlights').select('*').eq('call_id', id).order('start_ms'),
-    supabase.from('highlight_tags').select('*').eq('user_id', user?.id ?? '').order('position'),
-    supabase.from('playlists').select('id, title').eq('owner_id', user?.id ?? '').order('updated_at', { ascending: false }),
+    supabase
+      .from('highlight_tags')
+      .select('*')
+      .eq('user_id', user?.id ?? '')
+      .order('position'),
+    supabase
+      .from('playlists')
+      .select('id, title')
+      .eq('owner_id', user?.id ?? '')
+      .order('updated_at', { ascending: false }),
   ]);
 
   return (

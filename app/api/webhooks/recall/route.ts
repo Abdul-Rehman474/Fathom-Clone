@@ -4,7 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { verifyRecallWebhook } from '@/lib/providers/recall';
 import { applyBotChange } from '@/lib/bot/lifecycle';
 
-export const maxDuration = 60;
+// A `done` event starts transcription after the reply; give it room.
+export const maxDuration = 300;
 
 interface RecallWebhook {
   event?: string;
@@ -31,9 +32,14 @@ export async function POST(request: NextRequest) {
   }
 
   const db = createAdminClient();
-  const msgId = request.headers.get('webhook-id') ?? request.headers.get('svix-id') ?? '';
+  // verifyRecallWebhook has already required this header.
+  const msgId = (request.headers.get('webhook-id') ?? request.headers.get('svix-id'))!;
   const { error: dupe } = await db.from('webhook_events').insert({ provider: 'recall_msg', event_id: msgId });
-  if (dupe) return NextResponse.json({ ok: true, duplicate: true });
+  if (dupe) {
+    if (dupe.code === '23505') return NextResponse.json({ ok: true, duplicate: true });
+    // Could not record it: ask Recall to redeliver instead of dropping the event.
+    return NextResponse.json({ error: 'dedupe_unavailable' }, { status: 503 });
+  }
 
   const botId = body.data?.bot?.id;
   const event = body.event ?? '';

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseMeetingUrl, PLATFORM_NAME } from '@/lib/meeting-url';
 import { sendNotetaker } from '@/lib/bot/lifecycle';
+import { notetakerErrorMessage } from '@/lib/providers/recall';
 
 const bodySchema = z.object({
   meetingUrl: z.string().max(2000),
@@ -46,15 +47,10 @@ export async function POST(request: NextRequest) {
   try {
     await sendNotetaker(db, call.id);
   } catch (e) {
-    const reason = e instanceof Error ? e.message.slice(0, 200) : '';
-    await db
-      .from('calls')
-      .update({ status: 'failed', failed_stage: 'bot', error: `Could not send the notetaker. ${reason}`.trim() })
-      .eq('id', call.id);
-    return NextResponse.json(
-      { error: 'send_failed', callId: call.id, message: 'Could not send the notetaker.' },
-      { status: 502 },
-    );
+    console.error('notetaker send failed', e);
+    const message = notetakerErrorMessage(e);
+    await db.from('calls').update({ status: 'failed', failed_stage: 'bot', error: message }).eq('id', call.id);
+    return NextResponse.json({ error: 'send_failed', callId: call.id, message }, { status: 502 });
   }
   return NextResponse.json({ callId: call.id, platform: meeting.platform, status: 'joining' });
 }

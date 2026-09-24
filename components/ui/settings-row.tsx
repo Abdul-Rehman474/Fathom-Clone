@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { cn } from '@/lib/utils';
 
 /** Settings row: editorial divider row (no floating card): icon, title +
@@ -15,6 +16,8 @@ export function SettingsRow({
   control?: React.ReactNode;
   className?: string;
 }) {
+  // The row title names its control, so a switch is announced as e.g. "Auto action items, switch, on".
+  const titleId = useId();
   return (
     <div
       className={cn(
@@ -29,11 +32,17 @@ export function SettingsRow({
           </div>
         )}
         <div className="space-y-1">
-          <div className="font-semibold text-off-white">{title}</div>
+          <div id={titleId} className="font-semibold text-off-white">
+            {title}
+          </div>
           {description && <div className="text-sm text-text-2">{description}</div>}
         </div>
       </div>
-      {control && <div className="shrink-0 sm:pl-4">{control}</div>}
+      {control && (
+        <div role="group" aria-labelledby={titleId} className="shrink-0 sm:pl-4">
+          {control}
+        </div>
+      )}
     </div>
   );
 }

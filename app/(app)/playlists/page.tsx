@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { ListVideo, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate } from '@/lib/time';
 import { createPlaylist } from '@/app/(app)/playlists/actions';
 import { Button } from '@/components/ui/button';
+import { PageHeading, EmptyState } from '@/components/ui/page-heading';
 
 export const metadata = { title: 'Playlists' };
 
@@ -11,7 +12,7 @@ function NewPlaylistButton() {
   return (
     <form action={createPlaylist}>
       <input type="hidden" name="title" value="New playlist" />
-      <Button type="submit" size="sm">
+      <Button type="submit">
         <Plus /> New playlist
       </Button>
     </form>
@@ -29,50 +30,47 @@ export default async function PlaylistsPage() {
     .eq('owner_id', user?.id ?? '')
     .order('updated_at', { ascending: false });
 
-  if (!playlists || playlists.length === 0) {
-    return (
-      <div className="mx-auto max-w-2xl py-16 text-center">
-        <p className="text-xs font-semibold uppercase tracking-wide text-text-3">Playlists</p>
-        <h1 className="mt-2 text-2xl font-semibold">Create shareable playlists of highlights</h1>
-        <p className="mt-3 text-text-2">
-          Playlists let you save highlights from your calls into organized collections that are easy to share.
-        </p>
-        <ul className="mx-auto mt-6 max-w-md space-y-2 text-left text-gold">
-          <li>✓ Organize feedback across multiple meetings</li>
-          <li>✓ Create training libraries of key moments</li>
-          <li>✓ Share customer testimonials</li>
-        </ul>
-        <div className="mt-8 flex justify-center">
-          <NewPlaylistButton />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="mx-auto max-w-4xl space-y-3">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Playlists</h1>
-        <NewPlaylistButton />
-      </div>
-      {playlists.map((p) => {
-        const count = (p as { playlist_items: { count: number }[] }).playlist_items?.[0]?.count ?? 0;
-        return (
-          <Link
-            key={p.id}
-            href={`/playlists/${p.id}`}
-            className="flex items-center gap-3 rounded-card border border-border bg-surface-1 p-4 hover:bg-surface-2"
-          >
-            <ListVideo className="size-5 text-cyan" />
-            <div className="flex-1">
-              <div className="font-semibold">{p.title}</div>
-              <div className="text-xs text-text-3">
-                {count} highlight{count === 1 ? '' : 's'} · Updated {formatDate(p.updated_at)}
-              </div>
-            </div>
-          </Link>
-        );
-      })}
+    <div className="mx-auto max-w-4xl">
+      <PageHeading
+        eyebrow="Library"
+        title="Playlists"
+        description="Collections of highlights from across your calls — for feedback, training and sharing."
+        actions={<NewPlaylistButton />}
+      />
+
+      {!playlists || playlists.length === 0 ? (
+        <EmptyState
+          label="No playlists yet"
+          title="Create shareable playlists of highlights"
+          body="Organize feedback across meetings, build training libraries of key moments, and share customer testimonials."
+          action={<NewPlaylistButton />}
+        />
+      ) : (
+        <div className="border-t border-border">
+          {playlists.map((p) => {
+            const count = (p as { playlist_items: { count: number }[] }).playlist_items?.[0]?.count ?? 0;
+            return (
+              <Link
+                key={p.id}
+                href={`/playlists/${p.id}`}
+                className="group flex items-center justify-between gap-6 border-b border-border py-5 transition-transform duration-200 hover:translate-x-0.5"
+              >
+                <div className="min-w-0">
+                  <h2 className="truncate font-display text-lg font-semibold group-hover:text-lime">{p.title}</h2>
+                  {p.description && <p className="mt-1 truncate text-sm text-text-3">{p.description}</p>}
+                </div>
+                <div className="flex shrink-0 items-center gap-6 text-sm text-text-3 tnum">
+                  <span>
+                    <span className="text-off-white">{count}</span> highlight{count === 1 ? '' : 's'}
+                  </span>
+                  <span className="hidden sm:inline">Updated {formatDate(p.updated_at)}</span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

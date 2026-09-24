@@ -29,8 +29,8 @@ export function SettingsForm({ initial }: { initial: UserSettings }) {
 
   return (
     <div className="space-y-10">
-      <section className="space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-text-3">Premium features</h2>
+      <section id="premium" className="scroll-mt-24">
+        <h2 className="border-b border-border pb-4 font-display text-xl font-semibold tracking-tight">Premium features</h2>
         <SettingsRow
           icon={<Bot />}
           title={
@@ -73,7 +73,7 @@ export function SettingsForm({ initial }: { initial: UserSettings }) {
           control={
             <Select value={s.default_template} onValueChange={(v) => save({ default_template: v })}>
               <SelectTrigger className="w-44">
-                <SelectValue />
+                <SelectValue>{TEMPLATE_LABELS[s.default_template as keyof typeof TEMPLATE_LABELS] ?? 'General'}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {SUMMARY_TEMPLATES.map((t) => (
@@ -93,8 +93,8 @@ export function SettingsForm({ initial }: { initial: UserSettings }) {
         />
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-text-3">Options</h2>
+      <section id="options" className="scroll-mt-24">
+        <h2 className="border-b border-border pb-4 font-display text-xl font-semibold tracking-tight">Options</h2>
         <SettingsRow
           icon={<ShieldCheck />}
           title="Auto Request Recording Consent"
@@ -106,7 +106,9 @@ export function SettingsForm({ initial }: { initial: UserSettings }) {
           control={
             <Select value={s.default_share_access} onValueChange={(v) => save({ default_share_access: v as never })}>
               <SelectTrigger className="w-56">
-                <SelectValue />
+                <SelectValue>
+                  {{ link: 'Anyone with the link can view', workspace: 'Workspace members', private: 'Only me' }[s.default_share_access]}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="link">Anyone with the link can view</SelectItem>

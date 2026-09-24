@@ -56,11 +56,11 @@ export function SummaryTab({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-wrap items-center gap-2">
         <Select value={template} onValueChange={regenerate}>
           <SelectTrigger className="h-9 w-44 text-sm">
-            <SelectValue />
+            <SelectValue>{TEMPLATE_LABELS[template as keyof typeof TEMPLATE_LABELS] ?? 'General'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {SUMMARY_TEMPLATES.map((t) => (
@@ -72,7 +72,7 @@ export function SummaryTab({
         </Select>
         <Select value={order} onValueChange={(v) => setOrder(v as 'topic' | 'chronological')}>
           <SelectTrigger className="h-9 w-40 text-sm">
-            <SelectValue />
+            <SelectValue>{order === 'topic' ? 'By topic' : 'Chronological'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="topic">By topic</SelectItem>
@@ -97,15 +97,18 @@ export function SummaryTab({
         </Section>
       ) : (
         <>
+          {content.overview && (
+            <p className="font-display text-xl leading-relaxed tracking-tight text-off-white">{content.overview}</p>
+          )}
           {content.purpose && (
-            <Section title="Meeting purpose">
-              <p className="text-sm text-text-2">{content.purpose}</p>
+            <Section title="Meeting purpose" list={false}>
+              <p className="leading-relaxed text-off-white/90">{content.purpose}</p>
             </Section>
           )}
           {content.key_takeaways.length > 0 && (
             <Section title="Key takeaways">
               {content.key_takeaways.map((t, i) => (
-                <li key={i} className="text-sm text-text-2">
+                <li key={i} className="leading-relaxed text-off-white/90">
                   {t}
                 </li>
               ))}
@@ -128,7 +131,7 @@ export function SummaryTab({
           {content.next_steps.length > 0 && (
             <Section title="Next steps">
               {content.next_steps.map((t, i) => (
-                <li key={i} className="text-sm text-text-2">
+                <li key={i} className="leading-relaxed text-off-white/90">
                   {t}
                 </li>
               ))}
@@ -137,7 +140,7 @@ export function SummaryTab({
           {content.questions.length > 0 && (
             <Section title="Questions raised">
               {content.questions.map((t, i) => (
-                <li key={i} className="text-sm text-text-2">
+                <li key={i} className="leading-relaxed text-off-white/90">
                   {t}
                 </li>
               ))}
@@ -149,19 +152,19 @@ export function SummaryTab({
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, list = true }: { title: string; children: React.ReactNode; list?: boolean }) {
   return (
     <div>
-      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-text-3">{title}</h3>
-      <ul className="space-y-1.5 pl-1">{children}</ul>
+      <h3 className="micro-label mb-3">{title}</h3>
+      {list ? <ul className="space-y-2">{children}</ul> : children}
     </div>
   );
 }
 
 function Bullet({ text, ms, onSeek }: { text: string; ms: number | null; onSeek: (ms: number) => void }) {
   return (
-    <li className="flex items-start gap-2 text-sm text-text-2">
-      <span className="mt-1.5 size-1 shrink-0 rounded-full bg-text-3" />
+    <li className="flex items-start gap-3 leading-relaxed text-off-white/90">
+      <span className="mt-2.5 size-1 shrink-0 rounded-full bg-lime" />
       <span>
         {text} {ms != null && <TimestampChip ms={ms} onSeek={onSeek} />}
       </span>

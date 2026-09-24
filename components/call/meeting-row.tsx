@@ -43,7 +43,7 @@ export function MeetingRow({ call }: { call: CallCardData }) {
       href={`/calls/${call.id}`}
       className="group block border-b border-border py-5 transition-transform duration-200 hover:translate-x-0.5"
     >
-      <div className="flex items-start justify-between gap-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-display text-lg font-semibold text-off-white group-hover:text-lime">
             {call.title ?? 'Untitled recording'}
@@ -54,7 +54,7 @@ export function MeetingRow({ call }: { call: CallCardData }) {
           </p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-5 pt-0.5">
+        <div className="flex shrink-0 items-center gap-5 sm:pt-0.5">
           {ready && (
             <>
               <span className="text-sm text-muted tnum">

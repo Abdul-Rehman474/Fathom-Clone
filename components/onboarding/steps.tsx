@@ -6,6 +6,7 @@ import { ChoiceCard } from '@/components/ui/choice-card';
 import { SentenceSelect } from '@/components/ui/sentence-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import { SubmitButton } from '@/components/onboarding/submit-button';
 import { BRAND_NAME } from '@/lib/config';
 import {
   saveAccountType,
@@ -18,65 +19,62 @@ import {
 
 const continueBtn =
   'h-11 w-[450px] max-w-full rounded-btn font-semibold transition-colors';
-const enabled = 'border border-cyan text-cyan hover:bg-cyan-tint';
+const enabled = 'bg-lime text-carbon hover:bg-lime-bright hover:-translate-y-px';
 const disabled = 'bg-surface-2 text-text-3 cursor-not-allowed';
 
 /* --------------------------------- Step 1 -------------------------------- */
 export function AccountTypeStep({ email, isPersonalEmail }: { email: string; isPersonalEmail: boolean }) {
   return (
     <div className="w-full">
-      <h1 className="font-display text-3xl font-light sm:text-4xl">
-        <span className="text-orange">Are your meetings on your company calendar?</span>
-        <br />
-        <span className="text-text-1">We recommend using your work email.</span>
+      <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-5xl">
+        Are your meetings on your company calendar?
       </h1>
+      <p className="mt-4 text-lg text-muted">We recommend using your work email.</p>
       {isPersonalEmail && (
-        <p className="mt-3 text-sm text-text-3">
+        <p className="mt-2 text-sm text-text-3">
           <span className="text-text-2">{email}</span> looks like a personal email
         </p>
       )}
 
-      <form className="mx-auto mt-10 grid max-w-3xl gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-4 rounded-frame border border-border bg-surface-1 p-6 text-left">
-          <div className="text-lg font-semibold">Personal use only</div>
+      {/* One form per choice: a hidden input carries the value, because a
+          server-action `formAction` overrides a button's `name`. */}
+      <div className="mx-auto mt-12 grid max-w-3xl gap-4 text-left sm:grid-cols-2">
+        <form action={saveAccountType} className="flex flex-col gap-4 rounded-card border border-border bg-surface-1 p-6">
+          <input type="hidden" name="account_type" value="personal" />
+          <div className="font-display text-lg font-semibold">Personal use only</div>
           <p className="text-sm text-text-3">Suited for one-off calls</p>
           <ul className="space-y-2 text-sm text-text-2">
-            <li>○ View only your own meetings</li>
-            <li>○ No shared workspace</li>
-            <li>○ Cannot convert to a team plan later</li>
+            <li>— View only your own meetings</li>
+            <li>— No shared workspace</li>
+            <li>— Cannot convert to a team plan later</li>
           </ul>
-          <button
-            name="account_type"
-            value="personal"
-            formAction={saveAccountType}
-            className="mt-auto h-10 rounded-btn bg-surface-2 font-semibold text-text-1 hover:bg-surface-3"
+          <SubmitButton
+            pendingLabel="Saving…"
+            className="mt-auto h-10 rounded-btn border border-border-strong font-semibold text-text-1 transition-colors hover:border-off-white"
           >
             Continue with Personal Email
-          </button>
-        </div>
+          </SubmitButton>
+        </form>
 
-        <div className="flex flex-col gap-4 rounded-frame border-[1.5px] border-cyan bg-surface-1 p-6 text-left">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold">Individual or Team use</span>
-            <span className="rounded-chip bg-cyan-tint px-2 py-0.5 text-xs font-semibold uppercase text-cyan">
-              Recommended
-            </span>
+        <form action={saveAccountType} className="flex flex-col gap-4 rounded-card border border-lime/50 bg-surface-1 p-6">
+          <input type="hidden" name="account_type" value="team" />
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-display text-lg font-semibold">Individual or Team use</span>
+            <span className="micro-label !text-lime">Recommended</span>
           </div>
           <ul className="space-y-2 text-sm text-text-2">
-            <li className="text-orange">✓ Set individual and team preferences</li>
-            <li className="text-orange">✓ Create private and shared workspaces</li>
-            <li className="text-orange">✓ Add teammates anytime</li>
+            <li><span className="text-lime">✓</span> Set individual and team preferences</li>
+            <li><span className="text-lime">✓</span> Create private and shared workspaces</li>
+            <li><span className="text-lime">✓</span> Add teammates anytime</li>
           </ul>
-          <button
-            name="account_type"
-            value="team"
-            formAction={saveAccountType}
-            className="mt-auto h-10 rounded-btn bg-cyan font-semibold text-black hover:bg-cyan-press"
+          <SubmitButton
+            pendingLabel="Saving…"
+            className="mt-auto h-10 rounded-btn bg-lime font-semibold text-carbon transition-all hover:-translate-y-px hover:bg-lime-bright"
           >
             Continue with Work Email
-          </button>
-        </div>
-      </form>
+          </SubmitButton>
+        </form>
+      </div>
     </div>
   );
 }
@@ -103,7 +101,7 @@ export function PreferencesStep({ notesOn, shareWith }: { notesOn: string; share
     <form action={savePreferences} className="w-full">
       <input type="hidden" name="notes_on" value={notes} />
       <input type="hidden" name="share_with" value={share} />
-      <h1 className="font-display text-3xl font-light">Set up your preferences</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-5xl">Set up your preferences</h1>
       <p className="mx-auto mt-8 max-w-2xl text-xl leading-relaxed text-text-1">
         Take notes on{' '}
         <SentenceSelect value={notes} onValueChange={setNotes} options={NOTES_ON} /> and share with{' '}
@@ -119,9 +117,9 @@ export function PreferencesStep({ notesOn, shareWith }: { notesOn: string; share
       </label>
 
       <div className="mt-8 flex justify-center">
-        <button type="submit" disabled={!consent} className={cn(continueBtn, consent ? enabled : disabled)}>
+        <SubmitButton pendingLabel="Saving…" disabled={!consent} className={cn(continueBtn, consent ? enabled : disabled)}>
           Continue
-        </button>
+        </SubmitButton>
       </div>
     </form>
   );
@@ -140,7 +138,7 @@ export function AboutYouStep({ department, role }: { department: string; role: s
     <form action={saveAboutYou} className="w-full">
       <input type="hidden" name="department" value={dep} />
       <input type="hidden" name="role" value={rol} />
-      <h1 className="font-display text-3xl font-light">Tell us about yourself</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-5xl">Tell us about yourself</h1>
       <p className="mx-auto mt-8 max-w-2xl text-xl leading-relaxed text-text-1">
         I work in{' '}
         <SentenceSelect value={dep} onValueChange={setDep} options={toOpts(DEPARTMENTS)} placeholder="Select Department" />{' '}
@@ -148,9 +146,9 @@ export function AboutYouStep({ department, role }: { department: string; role: s
         <SentenceSelect value={rol} onValueChange={setRol} options={toOpts(ROLES)} placeholder="Select Your Role" />.
       </p>
       <div className="mt-10 flex justify-center">
-        <button type="submit" disabled={!ready} className={cn(continueBtn, ready ? enabled : disabled)}>
+        <SubmitButton pendingLabel="Saving…" disabled={!ready} className={cn(continueBtn, ready ? enabled : disabled)}>
           Continue
-        </button>
+        </SubmitButton>
       </div>
     </form>
   );
@@ -162,7 +160,7 @@ export function UsageStep({ usage }: { usage: string }) {
   return (
     <form action={saveUsage} className="w-full">
       <input type="hidden" name="usage" value={choice} />
-      <h1 className="font-display text-3xl font-light">How are you planning to use {BRAND_NAME}?</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-5xl">How are you planning to use {BRAND_NAME}?</h1>
       <div className="mx-auto mt-10 grid max-w-2xl gap-4 sm:grid-cols-2">
         <ChoiceCard selected={choice === 'solo'} onSelect={() => setChoice('solo')} icon={<User />} title="By Myself" />
         <ChoiceCard selected={choice === 'team'} onSelect={() => setChoice('team')} icon={<Users />} title="With My Team">
@@ -170,9 +168,9 @@ export function UsageStep({ usage }: { usage: string }) {
         </ChoiceCard>
       </div>
       <div className="mt-10 flex justify-center">
-        <button type="submit" disabled={!choice} className={cn(continueBtn, choice ? enabled : disabled)}>
+        <SubmitButton pendingLabel="Saving…" disabled={!choice} className={cn(continueBtn, choice ? enabled : disabled)}>
           Continue
-        </button>
+        </SubmitButton>
       </div>
     </form>
   );
@@ -229,7 +227,7 @@ export function ConnectStep({
 }) {
   return (
     <div className="w-full">
-      <h1 className="font-display text-3xl font-light">Connect your meeting platforms</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-5xl">Connect your meeting platforms</h1>
       <p className="mt-3 text-text-2">
         Connect a platform so {BRAND_NAME} can create meetings and send your notetaker.
       </p>
@@ -242,18 +240,18 @@ export function ConnectStep({
 
       <div className="mt-10 flex flex-col items-center gap-3">
         <form action={advanceToFirstCall}>
-          <button type="submit" className={cn(continueBtn, enabled)}>
+          <SubmitButton pendingLabel="Saving…" className={cn(continueBtn, enabled)}>
             Continue
-          </button>
+          </SubmitButton>
         </form>
         <form action={advanceToFirstCall}>
-          <button type="submit" className="text-sm text-text-3 hover:text-text-2">
+          <SubmitButton className="text-sm text-text-3 hover:text-text-2">
             Skip this step
-          </button>
+          </SubmitButton>
         </form>
       </div>
       <p className="mx-auto mt-8 max-w-lg text-sm text-text-3">
-        👍 Don&apos;t worry, {BRAND_NAME} will only join the meetings that you ask it to. You&apos;re in
+        Don&apos;t worry, {BRAND_NAME} will only join the meetings that you ask it to. You&apos;re in
         control here.
       </p>
     </div>
@@ -264,32 +262,31 @@ export function ConnectStep({
 export function FirstCallStep() {
   return (
     <div className="w-full">
-      <p className="text-xs font-semibold uppercase tracking-[0.06em] text-cyan">You&apos;re all set</p>
-      <h1 className="mt-2 font-display text-3xl font-light">Capture your first meeting</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-5xl">Capture your first meeting</h1>
 
       <form action={finishOnboarding} className="mx-auto mt-10 grid max-w-3xl gap-4 sm:grid-cols-3">
-        <button type="submit" className="flex flex-col items-center gap-3 rounded-frame border border-border bg-surface-1 p-6 hover:bg-surface-2">
-          <Bot className="size-6 text-cyan" />
+        <SubmitButton className="flex flex-col items-center gap-3 rounded-frame border border-border bg-surface-1 p-6 hover:bg-surface-2">
+          <Bot className="size-5 text-lime" />
           <span className="font-semibold">Send notetaker to a meeting</span>
           <span className="text-sm text-text-3">Paste a Meet / Zoom / Teams link</span>
-        </button>
-        <button type="submit" className="flex flex-col items-center gap-3 rounded-frame border border-border bg-surface-1 p-6 hover:bg-surface-2">
-          <Video className="size-6 text-cyan" />
+        </SubmitButton>
+        <SubmitButton className="flex flex-col items-center gap-3 rounded-frame border border-border bg-surface-1 p-6 hover:bg-surface-2">
+          <Video className="size-5 text-lime" />
           <span className="font-semibold">Record a browser tab</span>
           <span className="rounded-chip bg-surface-2 px-2 py-0.5 text-xs text-text-3">Chrome / Edge</span>
-        </button>
-        <button type="submit" className="flex flex-col items-center gap-3 rounded-frame border border-border bg-surface-1 p-6 hover:bg-surface-2">
-          <Upload className="size-6 text-cyan" />
+        </SubmitButton>
+        <SubmitButton className="flex flex-col items-center gap-3 rounded-frame border border-border bg-surface-1 p-6 hover:bg-surface-2">
+          <Upload className="size-5 text-lime" />
           <span className="font-semibold">Upload a recording</span>
           <span className="text-sm text-text-3">Audio or video file</span>
-        </button>
+        </SubmitButton>
       </form>
 
       <div className="mt-8">
         <form action={finishOnboarding}>
-          <button type="submit" className="text-cyan hover:underline">
+          <SubmitButton className="text-cyan hover:underline">
             Go to My Calls →
-          </button>
+          </SubmitButton>
         </form>
       </div>
       <p className="mt-6 text-sm text-text-3">

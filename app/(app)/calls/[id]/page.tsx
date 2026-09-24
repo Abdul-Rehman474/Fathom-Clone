@@ -1,11 +1,20 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { CallView } from '@/components/call/call-view';
 import { StatusPoller } from '@/components/call/status-poller';
 import { RetryButton } from '@/components/call/retry-button';
 import { isTerminal } from '@/lib/pipeline/status';
 import type { Call, SummaryContent, TranscriptSegment, Attendee, ActionItem, Highlight, HighlightTag } from '@/lib/types';
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase.from('calls').select('title').eq('id', id).maybeSingle();
+  return { title: data?.title ?? 'Call' };
+}
 
 export default async function CallPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -20,26 +29,47 @@ export default async function CallPage({ params }: { params: Promise<{ id: strin
 
   // Processing / failed states
   if (!isTerminal(c.status)) {
+    const steps = [
+      { label: 'Recorded', state: 'done' },
+      { label: 'Transcribing', state: c.status === 'transcribing' ? 'active' : c.status === 'summarizing' ? 'done' : 'todo' },
+      { label: 'Summarizing', state: c.status === 'summarizing' ? 'active' : 'todo' },
+    ] as const;
     return (
-      <div className="mx-auto max-w-md py-24 text-center">
+      <div className="mx-auto max-w-lg py-20">
         <StatusPoller />
-        <Loader2 className="mx-auto size-8 animate-spin text-cyan" />
-        <h1 className="mt-4 text-lg font-semibold">{c.title ?? 'Processing your recording'}</h1>
-        <p className="mt-2 text-sm text-text-2">
-          Recorded ✓ → {c.status === 'transcribing' ? 'Transcribing ●' : 'Transcribed ✓'} →{' '}
-          {c.status === 'summarizing' ? 'Summarizing ●' : 'Summarizing ○'}
-        </p>
+        <p className="micro-label mb-3">Processing</p>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{c.title ?? 'Your recording'}</h1>
+        <p className="mt-3 text-text-2">This usually takes under a minute. The page updates on its own.</p>
+        <ol className="mt-10 border-t border-border">
+          {steps.map((st) => (
+            <li key={st.label} className="flex items-center justify-between border-b border-border py-4">
+              <span className={st.state === 'todo' ? 'text-text-3' : 'text-off-white'}>{st.label}</span>
+              {st.state === 'done' && <span className="text-sm text-lime">Done</span>}
+              {st.state === 'active' && (
+                <span className="flex items-center gap-2 text-sm text-lime">
+                  <Loader2 className="size-4 animate-spin" /> In progress
+                </span>
+              )}
+              {st.state === 'todo' && <span className="text-sm text-text-3">Waiting</span>}
+            </li>
+          ))}
+        </ol>
       </div>
     );
   }
   if (c.status === 'failed') {
+    const stage = c.failed_stage === 'summarizing' ? 'the summary step' : 'transcription';
     return (
-      <div className="mx-auto max-w-md py-24 text-center">
-        <AlertTriangle className="mx-auto size-8 text-danger" />
-        <h1 className="mt-4 text-lg font-semibold">Processing failed</h1>
-        <p className="mt-2 text-sm text-text-2">{c.error ?? 'Something went wrong.'}</p>
-        <div className="mt-4">
+      <div className="mx-auto max-w-lg py-20">
+        <p className="micro-label mb-3 !text-danger">Processing stopped</p>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">We couldn’t process this recording.</h1>
+        <p className="mt-3 text-text-2">Something went wrong during {stage}. Retrying resumes from that step.</p>
+        {c.error && <p className="mt-3 line-clamp-2 text-xs text-text-3">Details: {c.error.slice(0, 160)}</p>}
+        <div className="mt-8 flex gap-3">
           <RetryButton callId={c.id} />
+          <Link href="/calls" className="inline-flex h-10 items-center px-4 text-sm text-text-2 hover:text-off-white">
+            Back to My Calls
+          </Link>
         </div>
       </div>
     );
@@ -56,15 +86,23 @@ export default async function CallPage({ params }: { params: Promise<{ id: strin
   ]);
 
   return (
-    <CallView
-      call={c}
-      segments={(segRes.data ?? []) as TranscriptSegment[]}
-      summary={(sumRes.data?.content ?? null) as SummaryContent | null}
-      attendees={(attRes.data ?? []) as Attendee[]}
-      actionItems={(aiRes.data ?? []) as ActionItem[]}
-      highlights={(hlRes.data ?? []) as Highlight[]}
-      tags={(tagRes.data ?? []) as HighlightTag[]}
-      playlists={(plRes.data ?? []) as { id: string; title: string }[]}
-    />
+    <>
+      <Link
+        href="/calls"
+        className="mb-6 inline-flex items-center gap-2 text-sm text-text-3 transition-colors hover:text-lime"
+      >
+        <ArrowLeft className="size-4" /> Back to My Calls
+      </Link>
+      <CallView
+        call={c}
+        segments={(segRes.data ?? []) as TranscriptSegment[]}
+        summary={(sumRes.data?.content ?? null) as SummaryContent | null}
+        attendees={(attRes.data ?? []) as Attendee[]}
+        actionItems={(aiRes.data ?? []) as ActionItem[]}
+        highlights={(hlRes.data ?? []) as Highlight[]}
+        tags={(tagRes.data ?? []) as HighlightTag[]}
+        playlists={(plRes.data ?? []) as { id: string; title: string }[]}
+      />
+    </>
   );
 }

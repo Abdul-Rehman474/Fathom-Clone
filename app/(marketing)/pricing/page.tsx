@@ -21,7 +21,7 @@ export default function PricingPage() {
   return (
     <>
       <MSection className="!pt-20 text-center">
-        <h1 className="font-display text-4xl font-light sm:text-6xl">Simple, honest pricing</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-6xl">Simple, honest pricing</h1>
         <div className="mt-8 inline-flex rounded-pill border border-border p-1">
           {(['Monthly', 'Annual'] as const).map((label, i) => (
             <button
@@ -77,7 +77,7 @@ export default function PricingPage() {
       </MSection>
 
       <MSection className="!pt-0">
-        <h2 className="mb-6 text-center font-display text-3xl font-light">Frequently asked questions</h2>
+        <h2 className="mb-6 text-center font-display text-3xl font-semibold tracking-tight">Frequently asked questions</h2>
         <div className="mx-auto max-w-2xl space-y-2">
           {FAQ.map((f, i) => (
             <div key={f.q} className="rounded-card border border-border bg-surface-1">

@@ -22,8 +22,8 @@ const INTEGRATIONS = ['Claude', 'ChatGPT', 'Zapier', 'Slack', 'Salesforce', 'Hub
 export function IntegrationsSection() {
   const [open, setOpen] = useState<string | null>(null);
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-text-3">Integrations</h2>
+    <section id="integrations" className="scroll-mt-24">
+      <h2 className="border-b border-border pb-4 font-display text-xl font-semibold tracking-tight">Integrations</h2>
       {INTEGRATIONS.map((name) => (
         <SettingsRow
           key={name}
@@ -84,9 +84,9 @@ export function DangerZone() {
   }
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-text-3">Delete account</h2>
-      <div className="rounded-card border border-danger/40 bg-surface-1 p-6">
+    <section id="account" className="scroll-mt-24">
+      <h2 className="border-b border-border pb-4 font-display text-xl font-semibold tracking-tight">Delete account</h2>
+      <div className="mt-5 rounded-card border border-danger/30 p-6">
         <p className="text-sm text-danger">
           Deleting your account is permanent. All recordings and data will be deleted.
         </p>

@@ -13,7 +13,7 @@ export default function HelpPage() {
   return (
     <MSection className="!pt-20">
       <div className="text-center">
-        <h1 className="font-display text-4xl font-light sm:text-6xl">Help Center</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-6xl">Help Center</h1>
         <div className="relative mx-auto mt-8 max-w-lg">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-3" />
           <input

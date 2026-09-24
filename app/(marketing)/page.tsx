@@ -49,7 +49,7 @@ export default function HomePage() {
       {/* 4. Marquee statement */}
       <Section className="!py-16">
         <Marquee seconds={40}>
-          <span className="flex items-center gap-4 font-display text-5xl font-light text-text-1">
+          <span className="flex items-center gap-4 font-display text-5xl font-semibold tracking-tight text-text-1">
             Move work forward faster <Rocket className="size-16" />
           </span>
         </Marquee>
@@ -61,7 +61,7 @@ export default function HomePage() {
         <Reveal className="grid gap-10 lg:grid-cols-[auto_1fr] lg:items-center">
           <Planet className="size-40" />
           <div>
-            <h2 className="font-display text-4xl font-light">
+            <h2 className="font-display text-4xl font-semibold tracking-tight">
               Whether you’re a team of 1 or 1,000, {BRAND_NAME}’s got your back
             </h2>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -87,8 +87,8 @@ export default function HomePage() {
 
       {/* 7. CTA block */}
       <Section>
-        <div className="rounded-frame bg-purple px-8 py-16 text-center">
-          <h2 className="font-display text-4xl font-light text-white">Ready to never take notes again?</h2>
+        <div className="rounded-frame border border-border bg-carbon-soft px-8 py-16 text-center">
+          <h2 className="font-display text-4xl font-semibold tracking-tight text-white">Ready to never take notes again?</h2>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link href="/help">
               <Pill>Talk to sales</Pill>

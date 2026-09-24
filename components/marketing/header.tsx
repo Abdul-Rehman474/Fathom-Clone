@@ -45,7 +45,7 @@ export function MarketingHeader() {
       )}
     >
       <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-6">
-        <BrandMark showMenu />
+        <BrandMark />
 
         <nav className="hidden items-center gap-1 rounded-pill border border-border px-2 py-1 lg:flex">
           <Link href="/overview" className="rounded-pill px-3 py-1.5 text-sm text-text-2 hover:text-text-1">
@@ -93,9 +93,7 @@ export function MarketingHeader() {
             Log In
           </Link>
           <Link href="/signup">
-            <Pill variant="outline" className="h-10 px-6 text-sm">
-              Sign up free
-            </Pill>
+            <Pill className="h-10 px-5 text-xs">Sign up free</Pill>
           </Link>
         </div>
 

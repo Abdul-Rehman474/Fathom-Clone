@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { PageHeading } from '@/components/ui/page-heading';
 
 export const metadata = { title: 'Deals' };
 
@@ -11,36 +11,42 @@ const SAMPLE = [
 export default function DealsPage() {
   return (
     <div className="mx-auto max-w-5xl">
-      <div className="mb-6 rounded-card border border-border bg-surface-1 p-6">
-        <h1 className="text-lg font-semibold">Deal intelligence is available on Business</h1>
-        <p className="mt-1 text-sm text-text-2">Track deals, calls and outcomes in one place.</p>
-        <Button className="mt-4" variant="outline">
-          Start trial
-        </Button>
+      <PageHeading
+        eyebrow="Discover"
+        title="Deals"
+        description="Deal intelligence ties every sales call to the opportunity it moves forward."
+        actions={
+          <span className="rounded-pill border border-border-strong px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-text-3">
+            Business plan · Coming soon
+          </span>
+        }
+      />
+
+      <div className="mb-3 flex items-center justify-between">
+        <p className="micro-label">Sample data</p>
+        <p className="text-xs text-text-3">Illustrative only — not connected to a CRM</p>
       </div>
 
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-3">Sample data</p>
-      <div className="overflow-hidden rounded-card border border-border">
-        <table className="w-full text-sm">
-          <thead className="bg-surface-2 text-left text-text-3">
-            <tr>
-              <th className="p-3 font-medium">Deal</th>
-              <th className="p-3 font-medium">Company</th>
-              <th className="p-3 font-medium">Stage</th>
-              <th className="p-3 font-medium">Amount</th>
-              <th className="p-3 font-medium">Calls</th>
-              <th className="p-3 font-medium">Close date</th>
+      <div className="overflow-x-auto border-t border-border scroll-styled">
+        <table className="w-full min-w-[640px] text-sm">
+          <thead className="text-left text-text-3">
+            <tr className="border-b border-border">
+              {['Deal', 'Company', 'Stage', 'Amount', 'Calls', 'Close date'].map((h) => (
+                <th key={h} className="py-3 pr-4 text-xs font-semibold uppercase tracking-[0.1em]">
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {SAMPLE.map((d) => (
-              <tr key={d.deal} className="border-t border-border">
-                <td className="p-3">{d.deal}</td>
-                <td className="p-3 text-text-2">{d.company}</td>
-                <td className="p-3 text-text-2">{d.stage}</td>
-                <td className="p-3 tnum">{d.amount}</td>
-                <td className="p-3 tnum">{d.calls}</td>
-                <td className="p-3 text-text-2 tnum">{d.close}</td>
+              <tr key={d.deal} className="border-b border-border transition-colors hover:bg-white/[0.02]">
+                <td className="py-4 pr-4 font-semibold text-off-white">{d.deal}</td>
+                <td className="py-4 pr-4 text-text-2">{d.company}</td>
+                <td className="py-4 pr-4 text-text-2">{d.stage}</td>
+                <td className="py-4 pr-4 tnum">{d.amount}</td>
+                <td className="py-4 pr-4 tnum text-text-2">{d.calls}</td>
+                <td className="py-4 pr-4 tnum text-text-2">{d.close}</td>
               </tr>
             ))}
           </tbody>

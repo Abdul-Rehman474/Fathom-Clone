@@ -6,7 +6,8 @@ import { msToClock } from '@/lib/time';
 import { cn } from '@/lib/utils';
 
 export interface PlayerHandle {
-  seek: (ms: number) => void;
+  /** Returns false when there is no media to seek (caller can fall back). */
+  seek: (ms: number) => boolean;
 }
 
 interface Marker {
@@ -49,9 +50,10 @@ export const Player = forwardRef<
   useImperativeHandle(ref, () => ({
     seek(ms: number) {
       const el = mediaRef.current;
-      if (!el) return;
+      if (!el) return false;
       el.currentTime = ms / 1000;
       el.play().catch(() => {});
+      return true;
     },
   }));
 
@@ -74,6 +76,35 @@ export const Player = forwardRef<
 
   const noMedia = ready && !url;
 
+  // No recording (e.g. the demo call, or media not yet available): a compact
+  // notice instead of an empty 16:9 black box. Timestamps still work as
+  // transcript anchors.
+  if (noMedia) {
+    return (
+      <div className="flex items-center gap-4 rounded-card border border-border bg-carbon-soft px-5 py-4">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border-strong text-text-3">
+          <Play className="size-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-off-white">No recording attached</p>
+          <p className="text-sm text-text-3">
+            The transcript and summary are available below — timestamps jump to the transcript.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!ready) {
+    return (
+      <div className="relative aspect-video overflow-hidden rounded-frame border border-border bg-carbon-soft" aria-busy>
+        <div className="absolute inset-x-0 top-0 h-0.5 overflow-hidden bg-surface-2">
+          <div className="h-full w-1/3 animate-[loading-bar_1.2s_ease-in-out_infinite] bg-lime" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="overflow-hidden rounded-frame border border-border bg-black"
@@ -83,7 +114,7 @@ export const Player = forwardRef<
       aria-label="Media player"
     >
       <div className="relative aspect-video bg-black">
-        {url ? (
+        {url && (
           <video
             ref={mediaRef}
             src={url}
@@ -97,10 +128,6 @@ export const Player = forwardRef<
             onPlay={() => setPlaying(true)}
             onPause={() => setPlaying(false)}
           />
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-text-3">
-            {noMedia ? 'Recording playback isn’t available for this call.' : 'Loading…'}
-          </div>
         )}
       </div>
 

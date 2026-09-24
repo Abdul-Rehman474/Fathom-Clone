@@ -5,6 +5,7 @@ import { Pill } from '@/components/ui/button';
 import { MSection, PageHero, CtaBlock } from '@/components/marketing/blocks';
 import { Reveal } from '@/components/marketing/motion';
 import { Astronaut, Sparkle } from '@/components/marketing/illustrations';
+import { ProductFrame } from '@/components/marketing/product-frame';
 import { SOLUTIONS } from '@/lib/marketing';
 
 export function generateStaticParams() {
@@ -17,8 +18,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: s ? s.headline : 'Solutions' };
 }
 
-const PANELS = ['bg-purple', 'bg-orange', 'bg-pink'];
-const BORDERS = ['border-cyan', 'border-pink', 'border-yellow'];
+const PANELS = ['border border-border bg-carbon-soft'];
+const BORDERS = ['border-lime/50', 'border-border-strong', 'border-border-strong'];
 
 export default async function SolutionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -41,24 +42,24 @@ export default async function SolutionPage({ params }: { params: Promise<{ slug:
       </div>
 
       <MSection>
-        <h2 className="mb-10 text-center font-display text-3xl font-light">
+        <h2 className="mb-10 text-center font-display text-3xl font-semibold tracking-tight">
           Why {s.audience} teams choose Fathom
         </h2>
         <div className="space-y-6">
           {s.rows.map((row, i) => (
             <Reveal key={row.title} className={`grid gap-6 rounded-frame ${PANELS[i % PANELS.length]} p-8 lg:grid-cols-2 lg:items-center`}>
               <div>
-                <h3 className="font-display text-2xl font-light text-white">{row.title}</h3>
+                <h3 className="font-display text-2xl font-semibold tracking-tight text-white">{row.title}</h3>
                 <p className="mt-2 text-white/80">{row.body}</p>
               </div>
-              <div className="flex aspect-video items-center justify-center rounded-card bg-black/20 text-white/60">Product frame</div>
+              <ProductFrame kind={(['capture', 'summary', 'ask'] as const)[i % 3]} />
             </Reveal>
           ))}
         </div>
       </MSection>
 
       <MSection>
-        <h2 className="mb-10 text-center font-display text-3xl font-light">
+        <h2 className="mb-10 text-center font-display text-3xl font-semibold tracking-tight">
           Built for the {s.audience} lifecycle
         </h2>
         <div className="grid gap-4 md:grid-cols-3">
@@ -79,7 +80,7 @@ export default async function SolutionPage({ params }: { params: Promise<{ slug:
 
       <MSection>
         <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr] lg:items-center">
-          <h2 className="font-display text-3xl font-light">Powering {s.audience} teams at scale</h2>
+          <h2 className="font-display text-3xl font-semibold tracking-tight">Powering {s.audience} teams at scale</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {s.features.map((f) => (
               <div key={f.title} className="rounded-card border border-border bg-surface-1 p-5">

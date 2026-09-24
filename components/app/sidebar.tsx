@@ -43,7 +43,7 @@ const GROUPS: { title: string; items: Item[] }[] = [
   {
     title: 'Manage',
     items: [
-      { label: 'Integrations', href: '/settings#integrations', icon: Plug },
+      { label: 'Integrations', href: '/settings?section=integrations#integrations', icon: Plug },
       { label: 'Settings', href: '/settings', icon: SettingsIcon },
     ],
   },
@@ -53,11 +53,13 @@ export function Sidebar({ inviteCode, onNavigate }: { inviteCode: string; onNavi
   const pathname = usePathname();
   const params = useSearchParams();
   const isSearchView = params.get('focus') === 'search';
+  const isIntegrationsView = params.get('section') === 'integrations';
 
   function isActive(href: string): boolean {
     const base = href.split('?')[0].split('#')[0];
     if (base !== pathname) return false;
     if (base === '/calls') return href.includes('focus=search') ? isSearchView : !isSearchView;
+    if (base === '/settings') return href.includes('section=integrations') ? isIntegrationsView : !isIntegrationsView;
     return true;
   }
 

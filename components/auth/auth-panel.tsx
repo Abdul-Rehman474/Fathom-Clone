@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { BRAND_NAME } from '@/lib/config';
-import { Toaster, toast } from '@/components/ui/toaster';
+import { toast } from '@/components/ui/toaster';
 import {
   Tooltip,
   TooltipContent,
@@ -54,27 +54,23 @@ export function AuthPanel({ mode }: { mode: 'signin' | 'signup' }) {
     }
   }
 
-  const title = mode === 'signup' ? `Sign up for ${BRAND_NAME}` : 'Welcome back';
+  const title = mode === 'signup' ? 'Meetings, understood.' : 'Welcome back.';
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="rounded-frame border border-border bg-surface-1 p-8">
-        <div className="mb-6 text-4xl" aria-hidden>
-          🚀
-        </div>
-        <h1 className="text-2xl font-semibold text-text-1">{title}</h1>
-        <p className="mt-1 text-sm text-text-2">
-          Connect your work email to get started in minutes.
-        </p>
+      <div>
+        <p className="micro-label mb-4">{mode === 'signup' ? 'Create your account' : 'Sign in'}</p>
+        <h1 className="font-display text-4xl font-semibold tracking-tight text-off-white">{title}</h1>
+        <p className="mt-3 text-text-2">Connect your work email to get started in minutes.</p>
 
-        <div className="mt-6 space-y-3">
+        <div className="mt-10 space-y-3">
           <button
             type="button"
             onClick={signInWithGoogle}
             disabled={loading !== null}
-            className="flex h-16 w-full items-center justify-center gap-3 rounded-btn bg-white text-base font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60"
+            className="flex h-12 w-full items-center justify-center gap-3 rounded-btn bg-off-white text-sm font-semibold text-carbon transition-all hover:-translate-y-px hover:bg-white disabled:opacity-60"
           >
-            {loading === 'google' ? <Loader2 className="size-5 animate-spin" /> : <GoogleGlyph />}
+            {loading === 'google' ? <Loader2 className="size-4 animate-spin" /> : <GoogleGlyph />}
             Continue with Google
           </button>
 
@@ -84,9 +80,9 @@ export function AuthPanel({ mode }: { mode: 'signin' | 'signup' }) {
                 <button
                   type="button"
                   disabled={!MICROSOFT_ENABLED}
-                  className="flex h-16 w-full items-center justify-center gap-3 rounded-btn bg-white text-base font-semibold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex h-12 w-full items-center justify-center gap-3 rounded-btn border border-border-strong text-sm font-semibold text-text-2 transition-colors hover:border-off-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <span className="grid size-5 grid-cols-2 gap-0.5" aria-hidden>
+                  <span className="grid size-4 grid-cols-2 gap-px opacity-80" aria-hidden>
                     <span className="bg-[#F25022]" />
                     <span className="bg-[#7FBA00]" />
                     <span className="bg-[#00A4EF]" />
@@ -102,25 +98,25 @@ export function AuthPanel({ mode }: { mode: 'signin' | 'signup' }) {
           </Tooltip>
         </div>
 
-        <p className="mt-6 text-sm text-text-2">
+        <p className="mt-8 border-t border-border pt-6 text-sm text-text-2">
           {mode === 'signup' ? (
             <>
-              Already have a {BRAND_NAME} account?{' '}
-              <Link href="/login" className="text-cyan hover:underline">
+              Already have an account?{' '}
+              <Link href="/login" className="text-lime hover:underline">
                 Sign in
               </Link>
             </>
           ) : (
             <>
               New to {BRAND_NAME}?{' '}
-              <Link href="/signup" className="text-cyan hover:underline">
-                Sign up free
+              <Link href="/signup" className="text-lime hover:underline">
+                Create an account
               </Link>
             </>
           )}
         </p>
 
-        <p className="mt-4 text-xs text-text-3">
+        <p className="mt-3 text-xs leading-relaxed text-text-3">
           By continuing you agree to our{' '}
           <Link href="/legal/terms" className="underline hover:text-text-2">
             Terms
@@ -132,24 +128,6 @@ export function AuthPanel({ mode }: { mode: 'signin' | 'signup' }) {
           .
         </p>
       </div>
-      <Toaster />
     </TooltipProvider>
-  );
-}
-
-/** Right-hand marketing quote (UI.md §2). */
-export function AuthQuote() {
-  return (
-    <div className="hidden lg:block">
-      <div className="font-display text-7xl leading-none text-surface-3" aria-hidden>
-        &ldquo;
-      </div>
-      <p className="-mt-6 max-w-md font-display text-2xl font-light leading-snug text-text-1">
-        &ldquo;Work smarter, not harder,&rdquo; they said.
-        <br />
-        <span className="font-semibold text-orange">{BRAND_NAME} took it personally.</span>
-      </p>
-      <p className="mt-6 text-sm text-text-3">Sample testimonial · Product team</p>
-    </div>
   );
 }

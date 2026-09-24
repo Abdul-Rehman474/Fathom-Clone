@@ -38,7 +38,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
     startMs: h.start_ms,
     endMs: h.end_ms,
     note: h.note,
-    color: (h.tag_id && tagColor.get(h.tag_id)) || '#00B8F5',
+    color: (h.tag_id && tagColor.get(h.tag_id)) || '#C8FF3D',
   }));
 
   return (

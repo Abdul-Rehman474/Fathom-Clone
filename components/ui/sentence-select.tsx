@@ -34,7 +34,7 @@ export function SentenceSelect({
           className,
         )}
       >
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={placeholder}>{options.find((o) => o.value === value)?.label}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {options.map((o) => (

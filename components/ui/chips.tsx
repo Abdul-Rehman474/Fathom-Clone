@@ -32,15 +32,14 @@ export function TimestampChip({
   );
 }
 
-/** Assignee chip (designPlan.md §6): gold text on #3A3316, person icon. */
+/** Assignee chip: lime text on the dark lime tint, person icon. */
 export function AssigneeChip({ name, className }: { name: string; className?: string }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-chip px-1.5 py-0.5 text-xs text-gold',
+        'inline-flex items-center gap-1 rounded-chip bg-cyan-tint px-1.5 py-0.5 text-xs text-lime',
         className,
       )}
-      style={{ backgroundColor: '#3A3316' }}
     >
       <User className="size-3" />
       {name}

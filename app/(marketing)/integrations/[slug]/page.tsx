@@ -30,13 +30,13 @@ export default async function IntegrationDetail({ params }: { params: Promise<{ 
         <Link href="/signup">
           <Pill>{integration.available ? 'Get started' : 'Join the waitlist'}</Pill>
         </Link>
-        <span className={`self-center text-sm font-semibold ${integration.available ? 'text-success' : 'text-gold'}`}>
+        <span className={`self-center text-sm font-semibold ${integration.available ? 'text-lime' : 'text-text-3'}`}>
           {integration.available ? 'Available' : 'Coming soon in this demo'}
         </span>
       </PageHero>
 
       <MSection>
-        <h2 className="mb-8 text-center font-display text-3xl font-light">What you can do</h2>
+        <h2 className="mb-8 text-center font-display text-3xl font-semibold tracking-tight">What you can do</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {['Capture every call', 'Sync the summary', 'Act on what matters'].map((t, i) => (
             <div key={t} className="rounded-card border border-border bg-surface-1 p-6">
@@ -51,7 +51,7 @@ export default async function IntegrationDetail({ params }: { params: Promise<{ 
       </MSection>
 
       <MSection>
-        <h2 className="mb-8 text-center font-display text-3xl font-light">How it works</h2>
+        <h2 className="mb-8 text-center font-display text-3xl font-semibold tracking-tight">How it works</h2>
         <ol className="mx-auto max-w-xl space-y-4">
           {['Connect your account', 'Record or upload a meeting', 'See it flow into ' + integration.name].map((s, i) => (
             <li key={s} className="flex gap-4 rounded-card border border-border bg-surface-1 p-4">

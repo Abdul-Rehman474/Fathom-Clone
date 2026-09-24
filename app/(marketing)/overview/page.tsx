@@ -3,6 +3,7 @@ import { Pill } from '@/components/ui/button';
 import { MSection, PageHero, CtaBlock } from '@/components/marketing/blocks';
 import { Reveal, CountUp } from '@/components/marketing/motion';
 import { Moon } from '@/components/marketing/illustrations';
+import { ProductFrame } from '@/components/marketing/product-frame';
 import { LOGO_WALL } from '@/lib/marketing';
 
 export const metadata = { title: 'Overview' };
@@ -35,14 +36,14 @@ export default function OverviewPage() {
       </MSection>
 
       <MSection>
-        <Reveal className="grid gap-8 rounded-frame bg-purple p-10 lg:grid-cols-2 lg:items-center">
+        <Reveal className="grid gap-8 rounded-frame border border-border bg-carbon-soft p-10 lg:grid-cols-2 lg:items-center">
           <div>
-            <h2 className="font-display text-3xl font-light text-white">Never miss what matters</h2>
+            <h2 className="font-display text-3xl font-semibold tracking-tight text-white">Never miss what matters</h2>
             <p className="mt-3 text-white/80">
               Instant AI summaries in your favorite meeting platform — Zoom, Google Meet or Teams.
             </p>
           </div>
-          <div className="flex aspect-video items-center justify-center rounded-card bg-black/20 text-white/60">Product frame</div>
+          <ProductFrame kind="summary" />
         </Reveal>
       </MSection>
 

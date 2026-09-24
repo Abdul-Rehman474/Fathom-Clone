@@ -10,7 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { toast } from '@/components/ui/toaster';
 import { addTag, updateTag, deleteTag, moveTag } from '@/app/(app)/settings/actions';
 
-const SWATCHES = ['#00B8F5', '#22C55E', '#FACC15', '#FF7A1A', '#9B1CFF', '#FF9EC7', '#EF4444', '#B4B4BC'];
+// Distinguishable tag colours drawn from the system's lime/neutral/status tones.
+const SWATCHES = ['#C8FF3D', '#6FCF3F', '#E5C558', '#E08A3C', '#E5484D', '#F3F5EF', '#9BA298', '#9FC92F'];
 
 export function HighlightTagsManager({ tags }: { tags: HighlightTag[] }) {
   const router = useRouter();
@@ -18,11 +19,11 @@ export function HighlightTagsManager({ tags }: { tags: HighlightTag[] }) {
   const [newName, setNewName] = useState('');
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-text-3">Highlight options</h2>
-      <div className="space-y-2">
+    <section id="tags" className="scroll-mt-24">
+      <h2 className="border-b border-border pb-4 font-display text-xl font-semibold tracking-tight">Highlight options</h2>
+      <div>
         {tags.map((tag, i) => (
-          <div key={tag.id} className="flex items-center gap-3 rounded-card border border-border bg-surface-1 p-3">
+          <div key={tag.id} className="flex items-center gap-3 border-b border-border py-3">
             <div className="flex flex-col">
               <button
                 disabled={i === 0}

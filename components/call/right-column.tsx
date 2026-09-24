@@ -20,6 +20,20 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/toaster';
 import { formatDate, secToDurationLabel, msToClock } from '@/lib/time';
+
+const ACCESS_LABEL = {
+  link: 'Anyone with the link can view',
+  workspace: 'Workspace members',
+  private: 'Only me',
+} as const;
+
+const PLATFORM_LABEL: Record<Call['platform'], string> = {
+  meet: 'Google Meet',
+  zoom: 'Zoom',
+  teams: 'Microsoft Teams',
+  upload: 'Upload',
+  browser: 'Tab recording',
+};
 import {
   updateTitle,
   renameSpeaker,
@@ -69,7 +83,7 @@ export function RightColumn({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Title + meta */}
       <div>
         {editingTitle ? (
@@ -84,13 +98,13 @@ export function RightColumn({
           </div>
         ) : (
           <button onClick={() => setEditingTitle(true)} className="group flex items-start gap-2 text-left">
-            <h1 className="text-xl font-semibold">{call.title ?? 'Untitled recording'}</h1>
+            <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight">{call.title ?? 'Untitled recording'}</h1>
             <Pencil className="mt-1 size-4 shrink-0 text-text-3 opacity-0 group-hover:opacity-100" />
           </button>
         )}
         <p className="mt-1 text-sm text-text-3 tnum">
           {formatDate(call.created_at)} · {secToDurationLabel(call.duration_sec)} ·{' '}
-          <span className="capitalize">{call.platform}</span>
+          {PLATFORM_LABEL[call.platform]}
         </p>
         <div className="mt-3 flex items-center gap-2">
           <SharePopover call={call} />
@@ -128,7 +142,8 @@ export function RightColumn({
                 await deleteActionItem(call.id, item.id);
                 router.refresh();
               }}
-              className="text-text-3 opacity-0 group-hover:opacity-100"
+              className="text-text-3 transition-colors hover:text-danger lg:opacity-0 lg:group-hover:opacity-100"
+              aria-label="Delete action item"
             >
               <Trash2 className="size-3.5" />
             </button>
@@ -161,12 +176,12 @@ export function RightColumn({
             const tag = h.tag_id ? tagById.get(h.tag_id) : undefined;
             return (
               <div key={h.id} className="group flex items-start gap-2 py-1">
-                <span className="mt-1 size-3 shrink-0 rounded-[3px]" style={{ backgroundColor: tag?.color ?? '#7C7C86' }} />
+                <span className="mt-1 size-3 shrink-0 rounded-[3px]" style={{ backgroundColor: tag?.color ?? '#6F756D' }} />
                 <div className="flex-1">
                   <p className="text-sm text-text-2">{h.note ?? tag?.name}</p>
                   <TimestampChip ms={h.start_ms} onSeek={onSeek} />
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                <div className="flex items-center gap-1 lg:opacity-0 lg:group-hover:opacity-100">
                   <AddToPlaylistButton highlightId={h.id} playlists={playlists} onDone={() => router.refresh()} />
                   <button
                     onClick={async () => {
@@ -174,6 +189,7 @@ export function RightColumn({
                       router.refresh();
                     }}
                     className="text-text-3 hover:text-danger"
+                    aria-label="Delete highlight"
                   >
                     <Trash2 className="size-3.5" />
                   </button>
@@ -190,7 +206,7 @@ export function RightColumn({
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-3">{title}</h2>
+      <h2 className="micro-label mb-3 border-b border-border pb-2">{title}</h2>
       <div>{children}</div>
     </div>
   );
@@ -255,7 +271,7 @@ function AddHighlight({
       <PopoverContent className="w-64 space-y-2">
         <Select value={tagId} onValueChange={setTagId}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Tag" />
+            <SelectValue placeholder="Tag">{tags.find((t) => t.id === tagId)?.name}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {tags.map((t) => (
@@ -365,7 +381,7 @@ function SharePopover({ call }: { call: Call }) {
           }}
         >
           <SelectTrigger className="w-full">
-            <SelectValue />
+            <SelectValue>{ACCESS_LABEL[access as keyof typeof ACCESS_LABEL]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="link">Anyone with the link can view</SelectItem>

@@ -7,7 +7,7 @@ const SYSTEMS = ['Web app', 'Recording', 'Transcription', 'AI summaries', 'Ask F
 export default function StatusPage() {
   return (
     <MSection className="!pt-20">
-      <h1 className="font-display text-4xl font-light sm:text-6xl">System status</h1>
+      <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-6xl">System status</h1>
       <div className="mt-4 flex items-center gap-2 text-success">
         <span className="size-2.5 rounded-full bg-success" /> All systems operational
       </div>

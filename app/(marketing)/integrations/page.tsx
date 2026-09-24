@@ -13,7 +13,7 @@ export default function IntegrationsPage() {
   return (
     <>
       <MSection className="!pt-20 text-center">
-        <h1 className="font-display text-4xl font-light sm:text-6xl">Integrations</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-6xl">Integrations</h1>
         <p className="mx-auto mt-4 max-w-xl text-text-2">Connect Fathom to the tools your team already uses.</p>
         <div className="mt-8 flex flex-wrap justify-center gap-2">
           {CATEGORIES.map((c) => (
@@ -48,7 +48,7 @@ export default function IntegrationsPage() {
                 </div>
               </div>
               <p className="mt-3 text-sm text-text-2">{i.blurb}</p>
-              <p className={`mt-3 text-xs font-semibold ${i.available ? 'text-success' : 'text-gold'}`}>
+              <p className={`mt-3 text-xs font-semibold ${i.available ? 'text-lime' : 'text-text-3'}`}>
                 {i.available ? 'Available' : 'Coming soon in this demo'}
               </p>
             </Link>

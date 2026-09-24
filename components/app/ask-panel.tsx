@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Sparkles, ArrowUp, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { ArrowUp, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 
 const CHIPS = [
   'Surprise me with an insight',
@@ -87,10 +86,10 @@ export function AskPanel() {
   return (
     <aside className="hidden w-90 shrink-0 flex-col border-l border-border bg-bg-app lg:flex" style={{ width: 360 }}>
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <span className="flex items-center gap-1.5 text-sm font-semibold text-text-1">
-          <Sparkles className="size-4 text-cyan" /> ASK FATHOM
+        <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-off-white">
+          <span className="rec-dot size-1.5 rounded-full bg-lime" /> Ask Fathom
         </span>
-        <button onClick={() => setOpen(false)} className="text-text-3 hover:text-text-1">
+        <button onClick={() => setOpen(false)} className="text-text-3 hover:text-text-1" aria-label="Collapse Ask panel">
           <PanelRightClose className="size-4" />
         </button>
       </div>
@@ -109,17 +108,20 @@ export function AskPanel() {
             ))}
           </div>
         ) : (
-          messages.map((m, i) => (
-            <div
-              key={i}
-              className={cn(
-                'rounded-card px-3 py-2 text-sm',
-                m.role === 'user' ? 'bg-surface-2 text-text-1' : 'bg-surface-1 text-text-2',
-              )}
-            >
-              {m.text || <span className="text-text-3">…</span>}
-            </div>
-          ))
+          messages.map((m, i) =>
+            m.role === 'user' ? (
+              <div key={i} className="ml-auto w-fit max-w-[90%] rounded-btn bg-surface-2 px-3 py-2 text-sm text-off-white">
+                {m.text}
+              </div>
+            ) : (
+              <div key={i} className="border-l-2 border-lime pl-3">
+                <p className="micro-label mb-1 !text-lime">Fathom AI</p>
+                <p className="text-sm leading-relaxed text-off-white/90">
+                  {m.text || <span className="text-text-3">Thinking…</span>}
+                </p>
+              </div>
+            ),
+          )
         )}
       </div>
 
@@ -135,7 +137,8 @@ export function AskPanel() {
           <button
             onClick={() => ask(input)}
             disabled={busy || !input.trim()}
-            className="flex size-9 items-center justify-center rounded-full bg-cyan text-black disabled:opacity-40"
+            className="flex size-9 items-center justify-center rounded-full bg-lime text-carbon transition-transform hover:-translate-y-px disabled:opacity-40"
+            aria-label="Send"
           >
             <ArrowUp className="size-4" />
           </button>
@@ -143,7 +146,7 @@ export function AskPanel() {
         <div className="mt-2">
           <Select value={scope} onValueChange={(v) => setScope(v as 'mine' | 'team')}>
             <SelectTrigger className="h-8 w-36 text-xs">
-              <SelectValue />
+              <SelectValue>{scope === 'mine' ? 'My Calls' : 'Team Calls'}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="mine">My Calls</SelectItem>

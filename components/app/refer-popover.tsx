@@ -59,7 +59,7 @@ export function ReferPopover({ inviteCode }: { inviteCode: string }) {
             </Button>
           </a>
         </div>
-        <p className="mt-3 text-xs text-gold">
+        <p className="mt-3 text-xs text-text-3">
           Want to partner with {BRAND_NAME}? Ask about the partner program.
         </p>
       </PopoverContent>

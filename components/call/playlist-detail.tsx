@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowUp, ArrowDown, X, Play, Share2, Trash2, Copy } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowLeft, X, Play, Share2, Trash2, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -80,7 +81,7 @@ export function PlaylistDetail(props: {
   if (clips.length === 0) {
     return (
       <div className="mx-auto max-w-2xl py-16 text-center">
-        <h1 className="text-2xl font-semibold">{title}</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-tight">{title}</h1>
         <p className="mt-3 text-text-2">This playlist has no clips yet. Add highlights from a call’s Highlights panel.</p>
       </div>
     );
@@ -88,7 +89,10 @@ export function PlaylistDetail(props: {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <div className="mb-4 flex items-center justify-between gap-4">
+      <Link href="/playlists" className="mb-6 inline-flex items-center gap-2 text-sm text-text-3 transition-colors hover:text-lime">
+        <ArrowLeft className="size-4" /> All playlists
+      </Link>
+      <div className="mb-8 flex flex-col gap-4 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
         {editingTitle ? (
           <Input
             autoFocus
@@ -103,7 +107,7 @@ export function PlaylistDetail(props: {
           />
         ) : (
           <button onClick={() => setEditingTitle(true)}>
-            <h1 className="text-2xl font-semibold">{title}</h1>
+            <h1 className="font-display text-4xl font-semibold tracking-tight">{title}</h1>
           </button>
         )}
         <div className="flex gap-2">
@@ -114,6 +118,7 @@ export function PlaylistDetail(props: {
           <Button
             variant="danger"
             size="icon"
+            aria-label="Delete playlist"
             onClick={async () => {
               await deletePlaylist(id);
             }}
@@ -124,26 +129,32 @@ export function PlaylistDetail(props: {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="overflow-hidden rounded-frame border border-border bg-black">
+        <div className="self-start overflow-hidden rounded-frame border border-border">
           {mediaUrl ? (
-            <video ref={videoRef} src={mediaUrl} controls className="aspect-video w-full" onTimeUpdate={onTimeUpdate} />
-          ) : (
-            <div className="flex aspect-video items-center justify-center text-sm text-text-3">
-              Playback isn’t available for this clip’s recording.
-            </div>
-          )}
-          <div className="border-t border-border bg-surface-1 px-4 py-2 text-sm text-text-2">
-            {current.note ?? current.callTitle} · {msToClock(current.startMs)}
+            <video ref={videoRef} src={mediaUrl} controls className="aspect-video w-full bg-black" onTimeUpdate={onTimeUpdate} />
+          ) : null}
+          <div className="bg-carbon-soft px-5 py-4">
+            <p className="micro-label mb-2">Now selected</p>
+            <p className="font-display text-lg font-semibold">{current.note ?? 'Highlight'}</p>
+            <p className="mt-1 text-sm text-text-3 tnum">
+              {current.callTitle} · <span className="font-mono text-lime">{msToClock(current.startMs)}</span>
+            </p>
+            {!mediaUrl && (
+              <p className="mt-3 text-sm text-text-3">This clip’s call has no recording attached, so there’s nothing to play.</p>
+            )}
+            <Link href={`/calls/${current.callId}`} className="mt-4 inline-block text-sm text-lime hover:underline">
+              Open the call →
+            </Link>
           </div>
         </div>
 
-        <ol className="space-y-2">
+        <ol className="border-t border-border">
           {clips.map((c, i) => (
             <li
               key={c.highlightId}
               className={cn(
-                'group flex items-center gap-2 rounded-card border p-3',
-                i === active ? 'border-cyan bg-surface-2' : 'border-border bg-surface-1',
+                'group flex items-center gap-3 border-b border-l-2 border-b-border py-3 pl-3 pr-1 transition-colors',
+                i === active ? 'border-l-lime bg-white/[0.03]' : 'border-l-transparent hover:bg-white/[0.02]',
               )}
             >
               <span className="size-3 shrink-0 rounded-[3px]" style={{ backgroundColor: c.color }} />
@@ -153,15 +164,15 @@ export function PlaylistDetail(props: {
                   {c.callTitle} · {msToClock(c.startMs)}
                 </div>
               </button>
-              <div className="flex flex-col opacity-0 group-hover:opacity-100">
-                <button disabled={i === 0} onClick={async () => { await moveItem(id, c.highlightId, 'up'); router.refresh(); }} className="text-text-3 disabled:opacity-30">
+              <div className="flex flex-col lg:opacity-0 lg:group-hover:opacity-100">
+                <button disabled={i === 0} onClick={async () => { await moveItem(id, c.highlightId, 'up'); router.refresh(); }} className="text-text-3 hover:text-off-white disabled:opacity-30" aria-label="Move up">
                   <ArrowUp className="size-3.5" />
                 </button>
-                <button disabled={i === clips.length - 1} onClick={async () => { await moveItem(id, c.highlightId, 'down'); router.refresh(); }} className="text-text-3 disabled:opacity-30">
+                <button disabled={i === clips.length - 1} onClick={async () => { await moveItem(id, c.highlightId, 'down'); router.refresh(); }} className="text-text-3 hover:text-off-white disabled:opacity-30" aria-label="Move down">
                   <ArrowDown className="size-3.5" />
                 </button>
               </div>
-              <button onClick={async () => { await removeFromPlaylist(id, c.highlightId); router.refresh(); }} className="text-text-3 hover:text-danger">
+              <button onClick={async () => { await removeFromPlaylist(id, c.highlightId); router.refresh(); }} className="text-text-3 hover:text-danger" aria-label="Remove from playlist">
                 <X className="size-4" />
               </button>
             </li>

@@ -77,7 +77,7 @@ export function AppShell({
 
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Top bar */}
-          <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-bg-app/95 px-4 backdrop-blur-sm md:px-8">
+          <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-bg-app px-4 md:px-8">
             <button
               className="lg:hidden"
               onClick={() => setMobileNav(true)}
@@ -99,8 +99,8 @@ export function AppShell({
 
             <div className="ml-auto flex items-center gap-3 md:gap-5">
               <NewMeetingDialog>
-                <Button size="sm">
-                  <Plus /> New Meeting
+                <Button size="sm" aria-label="New meeting">
+                  <Plus /> <span className="hidden sm:inline">New Meeting</span>
                 </Button>
               </NewMeetingDialog>
               <SimpleTooltip content="Credits earned from referrals">

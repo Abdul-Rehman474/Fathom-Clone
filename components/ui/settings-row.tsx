@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 
-/** Settings row (designPlan.md §6): surface-1, radius 12, icon + title/desc + control. */
+/** Settings row — editorial divider row (no floating card): icon, title +
+ *  description, control on the right. */
 export function SettingsRow({
   icon,
   title,
@@ -17,22 +18,22 @@ export function SettingsRow({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-4 rounded-card border border-border bg-surface-1 p-6',
+        'flex flex-col gap-4 border-b border-border py-5 sm:flex-row sm:items-center sm:justify-between',
         className,
       )}
     >
       <div className="flex items-start gap-4">
         {icon && (
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-btn bg-white text-black [&_svg]:size-5">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-btn border border-border text-text-2 [&_svg]:size-4">
             {icon}
           </div>
         )}
         <div className="space-y-1">
-          <div className="text-base font-semibold text-text-1">{title}</div>
+          <div className="font-semibold text-off-white">{title}</div>
           {description && <div className="text-sm text-text-2">{description}</div>}
         </div>
       </div>
-      {control && <div className="shrink-0">{control}</div>}
+      {control && <div className="shrink-0 sm:pl-4">{control}</div>}
     </div>
   );
 }

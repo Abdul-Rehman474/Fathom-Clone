@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { ArrowUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 const CHIPS = ['What were the decisions?', 'List action items by person', 'What objections came up?'];
 
@@ -62,17 +61,20 @@ export function AskTab({ callId, onSeek }: { callId: string; onSeek: (ms: number
         </div>
       ) : (
         <div className="space-y-3">
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={cn(
-                'rounded-card px-3 py-2 text-sm',
-                m.role === 'user' ? 'bg-surface-2 text-text-1' : 'bg-surface-1 text-text-2',
-              )}
-            >
-              {m.role === 'assistant' ? <Cited text={m.text} onSeek={onSeek} /> : m.text}
-            </div>
-          ))}
+          {messages.map((m, i) =>
+            m.role === 'user' ? (
+              <div key={i} className="ml-auto w-fit max-w-[85%] rounded-btn bg-surface-2 px-3 py-2 text-sm text-off-white">
+                {m.text}
+              </div>
+            ) : (
+              <div key={i} className="border-l-2 border-lime pl-4">
+                <p className="micro-label mb-1.5 !text-lime">Fathom AI</p>
+                <p className="leading-relaxed text-off-white/90">
+                  <Cited text={m.text} onSeek={onSeek} />
+                </p>
+              </div>
+            ),
+          )}
         </div>
       )}
 
@@ -87,7 +89,8 @@ export function AskTab({ callId, onSeek }: { callId: string; onSeek: (ms: number
         <button
           onClick={() => ask(input)}
           disabled={busy || !input.trim()}
-          className="flex size-9 items-center justify-center rounded-full bg-cyan text-black disabled:opacity-40"
+          className="flex size-9 items-center justify-center rounded-full bg-lime text-carbon transition-transform hover:-translate-y-px disabled:opacity-40"
+          aria-label="Send"
         >
           <ArrowUp className="size-4" />
         </button>
@@ -98,7 +101,7 @@ export function AskTab({ callId, onSeek }: { callId: string; onSeek: (ms: number
 
 /** Render text, converting [m:ss] into seek buttons. */
 function Cited({ text, onSeek }: { text: string; onSeek: (ms: number) => void }) {
-  if (!text) return <span className="text-text-3">…</span>;
+  if (!text) return <span className="text-text-3">Thinking…</span>;
   const parts = text.split(/(\[\d+:\d{2}\])/g);
   return (
     <span>

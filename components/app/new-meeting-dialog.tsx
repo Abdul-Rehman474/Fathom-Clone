@@ -27,7 +27,8 @@ export function NewMeetingDialog({ children }: { children: React.ReactNode }) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>New meeting</DialogTitle>
+          <p className="micro-label">Start a new meeting</p>
+          <DialogTitle className="font-display text-2xl tracking-tight">How do you want to capture it?</DialogTitle>
         </DialogHeader>
         <Tabs defaultValue="record">
           <TabsList>
@@ -258,13 +259,37 @@ function RecordUploadPanel({ onDone }: { onDone: () => void }) {
           </>
         ) : (
           <>
-            <label className="flex items-center gap-2 text-sm text-text-2">
-              <input type="radio" checked={!captureVideo} onChange={() => setCaptureVideo(false)} /> Audio only
-              (recommended)
-            </label>
-            <label className="flex items-center gap-2 text-sm text-text-2">
-              <input type="radio" checked={captureVideo} onChange={() => setCaptureVideo(true)} /> Audio + video
-            </label>
+            <div role="radiogroup" aria-label="Capture mode" className="space-y-1.5">
+              {[
+                { v: false, label: 'Audio only', hint: 'Recommended' },
+                { v: true, label: 'Audio + video', hint: 'Larger file' },
+              ].map((o) => (
+                <button
+                  key={o.label}
+                  type="button"
+                  role="radio"
+                  aria-checked={captureVideo === o.v}
+                  onClick={() => setCaptureVideo(o.v)}
+                  className={cn(
+                    'flex w-full items-center justify-between rounded-btn border px-3 py-2 text-left text-sm transition-colors',
+                    captureVideo === o.v ? 'border-lime/60 text-off-white' : 'border-border text-text-2 hover:border-border-strong',
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        'flex size-3.5 items-center justify-center rounded-full border',
+                        captureVideo === o.v ? 'border-lime' : 'border-border-strong',
+                      )}
+                    >
+                      {captureVideo === o.v && <span className="size-1.5 rounded-full bg-lime" />}
+                    </span>
+                    {o.label}
+                  </span>
+                  <span className="text-xs text-text-3">{o.hint}</span>
+                </button>
+              ))}
+            </div>
             <p className="text-xs text-text-3">Remember to collect attendee consent before recording.</p>
             <Button onClick={startRecording}>Start recording</Button>
           </>

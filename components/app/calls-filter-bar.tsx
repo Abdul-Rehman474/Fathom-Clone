@@ -38,7 +38,7 @@ export function CallsFilterBar({
     <div className="flex flex-wrap items-center gap-3">
       <Select value={platform} onValueChange={(v) => setParam('platform', v)}>
         <SelectTrigger className="h-9 w-44 text-sm">
-          <SelectValue />
+          <SelectValue>{PLATFORMS.find((p) => p.value === platform)?.label ?? 'All platforms'}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {PLATFORMS.map((p) => (
@@ -51,7 +51,7 @@ export function CallsFilterBar({
 
       <Select value={sort} onValueChange={(v) => setParam('sort', v === 'newest' ? null : v)}>
         <SelectTrigger className="h-9 w-32 text-sm">
-          <SelectValue />
+          <SelectValue>{sort === 'oldest' ? 'Oldest' : 'Newest'}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="newest">Newest</SelectItem>

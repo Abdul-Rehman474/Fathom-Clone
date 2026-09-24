@@ -6,7 +6,7 @@ export default function PrivacyPage() {
   return (
     <MSection className="!pt-20">
       <article className="mx-auto max-w-2xl">
-        <h1 className="font-display text-4xl font-light">Privacy Policy</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-tight">Privacy Policy</h1>
         <p className="mt-2 text-sm text-text-3">Sample policy for a demo application.</p>
         <div className="mt-8 space-y-6 text-text-2">
           {[

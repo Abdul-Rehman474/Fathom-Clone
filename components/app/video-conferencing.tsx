@@ -80,8 +80,8 @@ export function VideoConferencing({ integrations }: { integrations: Integration[
   const byProvider = new Map(integrations.map((i) => [i.provider, i]));
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-text-3">Video conferencing</h2>
+    <section id="video" className="scroll-mt-24">
+      <h2 className="border-b border-border pb-4 font-display text-xl font-semibold tracking-tight">Video conferencing</h2>
       <VcRow provider="zoom" label="Zoom" note="Create meetings and send your notetaker." conn={byProvider.get('zoom')} />
       <VcRow provider="google" label="Google Meet" note="Create meetings & send notetaker." conn={byProvider.get('google')} />
       <VcRow provider="teams" label="Microsoft Teams" note="Paste any Teams link — no connection needed." />

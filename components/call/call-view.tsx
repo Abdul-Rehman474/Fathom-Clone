@@ -39,9 +39,18 @@ export function CallView({
   const playerRef = useRef<PlayerHandle>(null);
   const [currentMs, setCurrentMs] = useState(0);
 
-  const seek = (ms: number) => playerRef.current?.seek(ms);
+  const [tab, setTab] = useState('summary');
+  const [focusMs, setFocusMs] = useState<number | null>(null);
+
+  // Seek the player; with no recording, jump to that moment in the transcript.
+  const seek = (ms: number) => {
+    if (playerRef.current?.seek(ms)) return;
+    setCurrentMs(ms);
+    setFocusMs(ms);
+    setTab('transcript');
+  };
   const markers = highlights.map((h) => {
-    const color = tags.find((t) => t.id === h.tag_id)?.color ?? '#00B8F5';
+    const color = tags.find((t) => t.id === h.tag_id)?.color ?? '#C8FF3D';
     return { ms: h.start_ms, color };
   });
 
@@ -50,7 +59,7 @@ export function CallView({
       <div className="min-w-0 space-y-4">
         <Player ref={playerRef} callId={call.id} markers={markers} onTime={setCurrentMs} />
 
-        <Tabs defaultValue="summary">
+        <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="transcript">Transcript</TabsTrigger>
@@ -69,6 +78,7 @@ export function CallView({
                 segments={segments}
                 attendees={attendees}
                 currentMs={currentMs}
+                focusMs={focusMs}
                 onSeek={seek}
                 title={call.title ?? 'transcript'}
               />

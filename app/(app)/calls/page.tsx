@@ -108,7 +108,7 @@ export default async function CallsPage({
           </div>
         </header>
 
-        <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <p className="micro-label">Recent meetings</p>
           <CallsFilterBar platform={platform} sort={sort} hasActionItems={hasActionItems} />
         </div>

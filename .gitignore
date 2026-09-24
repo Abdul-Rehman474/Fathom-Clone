@@ -33,3 +33,6 @@ FATHOM_CLONE.docx
 
 # TS build cache
 *.tsbuildinfo
+
+# Project docs are kept locally, not in the repository
+docs/

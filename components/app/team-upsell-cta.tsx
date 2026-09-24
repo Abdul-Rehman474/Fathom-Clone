@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { convertToTeam } from '@/app/(app)/team/actions';
 
-/** "Start 14-Day Trial" — converts a personal account to a team workspace. */
+/** "Start 14-Day Trial": converts a personal account to a team workspace. */
 export function TeamUpsellCta() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);

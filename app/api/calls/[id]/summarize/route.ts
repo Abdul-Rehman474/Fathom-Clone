@@ -9,7 +9,7 @@ export const maxDuration = 60;
 
 const bodySchema = z.object({ template: z.string().optional() });
 
-/** (Re)run the summarize step — also used by the "Regenerate" button. */
+/** (Re)run the summarize step: also used by the "Regenerate" button. */
 export async function POST(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const supabase = await createClient();

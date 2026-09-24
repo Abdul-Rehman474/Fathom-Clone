@@ -25,7 +25,7 @@ export function ReferPopover({ inviteCode }: { inviteCode: string }) {
   }
 
   const tweet = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-    `I'm using ${BRAND_NAME} for meeting notes — try it:`,
+    `I'm using ${BRAND_NAME} for meeting notes. Try it:`,
   )}&url=${encodeURIComponent(link)}`;
   const linkedin = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`;
 

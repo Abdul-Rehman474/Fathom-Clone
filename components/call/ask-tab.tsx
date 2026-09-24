@@ -102,11 +102,11 @@ export function AskTab({ callId, onSeek }: { callId: string; onSeek: (ms: number
 /** Render text, converting [m:ss] into seek buttons. */
 function Cited({ text, onSeek }: { text: string; onSeek: (ms: number) => void }) {
   if (!text) return <span className="text-text-3">Thinking…</span>;
-  const parts = text.split(/(\[\d+:\d{2}\])/g);
+  const parts = text.split(/(\[\d+:\d{2}(?:-\d+:\d{2})?\])/g);
   return (
     <span>
       {parts.map((p, i) => {
-        const m = p.match(/^\[(\d+):(\d{2})\]$/);
+        const m = p.match(/^\[(\d+):(\d{2})(?:-\d+:\d{2})?\]$/);
         if (m) {
           const ms = (Number(m[1]) * 60 + Number(m[2])) * 1000;
           return (

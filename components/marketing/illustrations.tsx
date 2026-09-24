@@ -1,5 +1,5 @@
 /** Flat SVG illustrations in the Carbon + Lime palette: lime, off-white and
- *  carbon tones only — no gradients, filters or off-system colours.
+ *  carbon tones only: no gradients, filters or off-system colours.
  *  Decorative → aria-hidden. */
 
 const LIME = '#C8FF3D';

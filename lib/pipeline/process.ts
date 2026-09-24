@@ -5,6 +5,7 @@ import { MOCK_PROVIDERS } from '@/lib/config';
 import { mapUtterances, submitToDeepgram, transcribeNow, publicSite, type DeepgramResult } from '@/lib/providers/deepgram';
 import { mockUtterances, mockDeepgramExtras } from '@/lib/providers/mock-fixtures';
 import { summarizeCall } from '@/lib/ai/summarize';
+import { hasLLM } from '@/lib/ai/client';
 import type { SummaryContent } from '@/lib/types';
 import { sleep } from '@/lib/pipeline/status';
 import { getRecordingUrl } from '@/lib/providers/recall';
@@ -37,6 +38,10 @@ export async function runPipeline(callId: string): Promise<void> {
 
     await setStatus(db, callId, 'transcribing', { failed_stage: null, error: null });
 
+    // A real meeting recording is never given a made-up transcript.
+    if (call.source === 'bot' && (MOCK_PROVIDERS || !process.env.DEEPGRAM_API_KEY)) {
+      throw new Error('Transcription isn’t set up on this server (DEEPGRAM_API_KEY is missing).');
+    }
     if (MOCK_PROVIDERS || !process.env.DEEPGRAM_API_KEY) {
       await sleep(1500);
       const utts = mockUtterances(call.duration_sec ?? 360);
@@ -120,10 +125,13 @@ export async function runSummarize(
   try {
     const { data: call } = await db
       .from('calls')
-      .select('id, template, owner_id, title')
+      .select('id, template, owner_id, title, source')
       .eq('id', callId)
       .maybeSingle();
     if (!call) return;
+    if (call.source === 'bot' && !hasLLM()) {
+      throw new Error('Summaries aren’t set up on this server (GROQ_API_KEY is missing).');
+    }
 
     const { data: segments } = await db
       .from('transcript_segments')
@@ -153,7 +161,7 @@ export async function runSummarize(
       { onConflict: 'call_id' },
     );
 
-    // Action items — respect the user's auto setting.
+    // Action items: respect the user's auto setting.
     const { data: settings } = await db
       .from('user_settings')
       .select('auto_action_items')

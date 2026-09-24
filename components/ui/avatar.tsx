@@ -4,7 +4,7 @@ import * as React from 'react';
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
 import { cn } from '@/lib/utils';
 
-/** Deterministic solid colour from a name — Carbon + Lime family only. */
+/** Deterministic solid colour from a name: Carbon + Lime family only. */
 const PALETTE = ['#C8FF3D', '#9FC92F', '#D7FF68', '#F3F5EF', '#B8C2AE', '#9BA298'];
 export function colorFromString(s: string) {
   let h = 0;

@@ -9,7 +9,7 @@ import { PRICING } from '@/lib/marketing';
 import { cn } from '@/lib/utils';
 
 const FAQ = [
-  { q: 'Is there a free plan?', a: 'Yes — Free includes unlimited recordings, AI summaries and Ask Fathom.' },
+  { q: 'Is there a free plan?', a: 'Yes. Free includes unlimited recordings, AI summaries and Ask Fathom.' },
   { q: 'Can I change plans later?', a: 'Anytime. Upgrades and downgrades take effect immediately.' },
   { q: 'Do you offer team pricing?', a: 'Team and Business plans include shared workspaces and admin controls.' },
 ];

@@ -23,7 +23,7 @@ export function AvatarMenu({ name, email }: { name: string; email: string }) {
     router.refresh();
   }
 
-  const webOnly = () => toast.info('This clone runs fully in your browser — web-only in this build.');
+  const webOnly = () => toast.info('There is no desktop app. Everything runs in the browser.');
 
   return (
     <DropdownMenu>

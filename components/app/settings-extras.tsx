@@ -18,7 +18,7 @@ import { toast } from '@/components/ui/toaster';
 
 const INTEGRATIONS = ['Claude', 'ChatGPT', 'Zapier', 'Slack', 'Salesforce', 'HubSpot', 'Task Manager'];
 
-/** Integrations + API/MCP + apps — all "coming soon" modals (UI.md §12.4-7). */
+/** Integrations + API/MCP + apps: all "coming soon" modals (UI.md §12.4-7). */
 export function IntegrationsSection() {
   const [open, setOpen] = useState<string | null>(null);
   return (
@@ -51,7 +51,7 @@ export function IntegrationsSection() {
       <Dialog open={open !== null} onOpenChange={(o) => !o && setOpen(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{open} — coming soon in this demo</DialogTitle>
+            <DialogTitle>{open} is coming soon</DialogTitle>
             <DialogDescription>
               This integration is presented as UI only in this build. The core capture → transcript
               → summary → Ask pipeline is fully functional.
@@ -63,7 +63,7 @@ export function IntegrationsSection() {
   );
 }
 
-/** Delete account — confirm by typing DELETE (UI.md §12.9). */
+/** Delete account: confirm by typing DELETE (UI.md §12.9). */
 export function DangerZone() {
   const router = useRouter();
   const [open, setOpen] = useState(false);

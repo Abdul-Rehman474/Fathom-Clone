@@ -1,3 +1,6 @@
+'use client';
+
+import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import type { CallStatus } from '@/lib/types';
 
@@ -18,7 +21,11 @@ export function StatusBadge({ status, className }: { status: CallStatus; classNa
   const c = CONFIG[status];
   const animated = status === 'transcribing' || status === 'summarizing';
   return (
-    <span
+    <motion.span
+      key={status}
+      initial={{ opacity: 0, scale: 0.92 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
         'inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-xs font-medium',
         c.className,
@@ -30,6 +37,6 @@ export function StatusBadge({ status, className }: { status: CallStatus; classNa
       )}
       {c.label}
       {animated && <span className="tnum">…</span>}
-    </span>
+    </motion.span>
   );
 }

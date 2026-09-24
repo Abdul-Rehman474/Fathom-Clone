@@ -40,7 +40,7 @@ export async function buildAccountContext(
     if (seen.has(s.callId) || !s.overview) continue;
     seen.add(s.callId);
     citations.push({ callId: s.callId, title: s.title, startMs: 0 });
-    blocks.push(`Call "${s.title}" (${s.createdAt.slice(0, 10)}) — summary:\n${s.overview}`);
+    blocks.push(`Call "${s.title}" (${s.createdAt.slice(0, 10)}) summary:\n${s.overview}`);
   }
 
   return { context: blocks.join('\n\n'), citations };
@@ -88,7 +88,7 @@ export async function streamAnswer(params: {
     });
   }
 
-  const system = `You answer questions about the user's meetings using only the provided context. Cite moments as [m:ss]. If the answer isn't in the context, say so. Scope: ${params.scopeLabel}.`;
+  const system = `You answer questions about the user's meetings using only the provided context. Cite moments as a single [m:ss] timestamp, never a range. If the answer isn't in the context, say so. Write plain sentences and never use em dashes or en dashes. Scope: ${params.scopeLabel}.`;
   return groqStream({
     model: MODEL_SUMMARY,
     maxTokens: 1024,
@@ -104,7 +104,7 @@ function mockAnswer({ question, context }: { question: string; context: string }
   if (!context.trim()) {
     return "I couldn't find anything in your calls about that yet. Once you have a processed call, ask again and I'll cite the exact moments.";
   }
-  return `Based on your meetings: ${question.replace(/\?$/, '')} — the discussion touched on this${
+  return `Based on your meetings: ${question.replace(/\?$/, '')}: the discussion touched on this${
     firstTs ? ` around [${firstTs}]` : ''
   }. Here's the gist drawn from the transcript context you have, with the key moment linked above. (This is a mock answer; add GROQ_API_KEY for live, reasoned responses.)`;
 }

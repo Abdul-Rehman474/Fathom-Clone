@@ -30,7 +30,7 @@ export default async function SolutionPage({ params }: { params: Promise<{ slug:
     <>
       <PageHero title={s.headline} intro={s.intro}>
         <Link href="/signup">
-          <Pill>Get started — it’s free</Pill>
+          <Pill>Get started free</Pill>
         </Link>
         <Link href="/help">
           <Pill variant="secondary">Talk to sales</Pill>

@@ -44,9 +44,9 @@ export function AccountTypeStep({ email, isPersonalEmail }: { email: string; isP
           <div className="font-display text-lg font-semibold">Personal use only</div>
           <p className="text-sm text-text-3">Suited for one-off calls</p>
           <ul className="space-y-2 text-sm text-text-2">
-            <li>— View only your own meetings</li>
-            <li>— No shared workspace</li>
-            <li>— Cannot convert to a team plan later</li>
+            <li>View only your own meetings</li>
+            <li>No shared workspace</li>
+            <li>Cannot convert to a team plan later</li>
           </ul>
           <SubmitButton
             pendingLabel="Saving…"
@@ -235,7 +235,7 @@ export function ConnectStep({
         <ConnectRow name="Google Meet" connected={googleConnected} provider="google" connectedEmail={connectedEmail} />
         <ConnectRow name="Zoom" connected={zoomConnected} provider="zoom" connectedEmail={connectedEmail} />
         <ConnectRow name="Microsoft Teams" connected={false} connectedEmail={connectedEmail} />
-        <p className="pl-1 text-xs text-text-3">Paste any Teams link — no connection needed.</p>
+        <p className="pl-1 text-xs text-text-3">Paste a Teams link. No connection needed.</p>
       </div>
 
       <div className="mt-10 flex flex-col items-center gap-3">
@@ -290,7 +290,7 @@ export function FirstCallStep() {
         </form>
       </div>
       <p className="mt-6 text-sm text-text-3">
-        {BRAND_NAME} runs fully in your browser — nothing to install.
+        {BRAND_NAME} runs in your browser. There is nothing to install.
       </p>
     </div>
   );

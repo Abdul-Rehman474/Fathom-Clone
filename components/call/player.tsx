@@ -88,7 +88,7 @@ export const Player = forwardRef<
         <div className="min-w-0">
           <p className="text-sm font-semibold text-off-white">No recording attached</p>
           <p className="text-sm text-text-3">
-            The transcript and summary are available below — timestamps jump to the transcript.
+            The transcript and summary are below. Click a timestamp to jump to that line.
           </p>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-/** Public signed media URL for a shared call — only when the token is valid and
+/** Public signed media URL for a shared call: only when the token is valid and
  *  share access is "link" (architecture.md §5, §11). */
 export async function GET(_request: NextRequest, ctx: { params: Promise<{ token: string }> }) {
   const { token } = await ctx.params;

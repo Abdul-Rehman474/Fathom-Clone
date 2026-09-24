@@ -11,9 +11,9 @@ export const metadata = { title: 'Overview' };
 export default function OverviewPage() {
   return (
     <>
-      <PageHero title="Meeting intelligence built around you" intro="Capture, understand and act on every conversation — without lifting a finger during the call.">
+      <PageHero title="How it works" intro="Send a notetaker or record the tab. When the call ends you get the transcript, the summary and the action items.">
         <Link href="/signup">
-          <Pill variant="secondary">Get started — it’s free</Pill>
+          <Pill variant="secondary">Get started free</Pill>
         </Link>
       </PageHero>
 
@@ -40,7 +40,7 @@ export default function OverviewPage() {
           <div>
             <h2 className="font-display text-3xl font-semibold tracking-tight text-white">Never miss what matters</h2>
             <p className="mt-3 text-white/80">
-              Instant AI summaries in your favorite meeting platform — Zoom, Google Meet or Teams.
+              Works with Zoom, Google Meet and Microsoft Teams.
             </p>
           </div>
           <ProductFrame kind="summary" />

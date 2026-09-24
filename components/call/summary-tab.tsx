@@ -183,7 +183,7 @@ function toMarkdown(c: SummaryContent): string {
   });
   if (c.decisions.length) lines.push('## Decisions', ...c.decisions.map((d) => `- ${d.text}`), '');
   if (c.action_items.length)
-    lines.push('## Action items', ...c.action_items.map((a) => `- ${a.text}${a.assignee ? ` — ${a.assignee}` : ''}`), '');
+    lines.push('## Action items', ...c.action_items.map((a) => `- ${a.text}${a.assignee ? ` (${a.assignee})` : ''}`), '');
   if (c.next_steps.length) lines.push('## Next steps', ...c.next_steps.map((t) => `- ${t}`), '');
   if (c.questions.length) lines.push('## Questions', ...c.questions.map((t) => `- ${t}`), '');
   return lines.join('\n');

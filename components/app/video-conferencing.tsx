@@ -84,7 +84,7 @@ export function VideoConferencing({ integrations }: { integrations: Integration[
       <h2 className="border-b border-border pb-4 font-display text-xl font-semibold tracking-tight">Video conferencing</h2>
       <VcRow provider="zoom" label="Zoom" note="Create meetings and send your notetaker." conn={byProvider.get('zoom')} />
       <VcRow provider="google" label="Google Meet" note="Create meetings & send notetaker." conn={byProvider.get('google')} />
-      <VcRow provider="teams" label="Microsoft Teams" note="Paste any Teams link — no connection needed." />
+      <VcRow provider="teams" label="Microsoft Teams" note="Paste a Teams link. No connection needed." />
       {integrations.length > 0 && (
         <p className="flex items-center gap-1 text-xs text-success">
           <Check className="size-3" /> Connected providers can create meetings from New Meeting.

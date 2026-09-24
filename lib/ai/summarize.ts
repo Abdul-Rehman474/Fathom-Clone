@@ -57,7 +57,7 @@ export async function summarizeCall(
 
   const system = `You are an expert meeting analyst. ${templateInstruction(
     template,
-  )} ${SCHEMA_HINT} Assign action items to the speaker who owns them when clear.`;
+  )} ${SCHEMA_HINT} Assign action items to the speaker who owns them when clear. Write plain, direct sentences. Never use em dashes or en dashes.`;
   const content = wrapTranscript(transcriptText(segments));
 
   async function attempt(extra?: string): Promise<SummaryOutput> {

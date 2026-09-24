@@ -32,7 +32,7 @@ export function PageHeading({
   );
 }
 
-/** Typographic empty state — no illustrations, just hierarchy and an action. */
+/** Typographic empty state: no illustrations, just hierarchy and an action. */
 export function EmptyState({
   label,
   title,

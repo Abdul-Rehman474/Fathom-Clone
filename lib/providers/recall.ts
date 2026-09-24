@@ -1,6 +1,5 @@
 import 'server-only';
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { MOCK_PROVIDERS } from '@/lib/config';
 
 /**
  * Recall.ai notetaker client (architecture.md §3.1). Field and event names
@@ -9,7 +8,17 @@ import { MOCK_PROVIDERS } from '@/lib/config';
  * detail in this file.
  */
 
-export const RECALL_LIVE = !MOCK_PROVIDERS && !!process.env.RECALL_API_KEY;
+/**
+ * The notetaker is always real: there is no simulated bot. Without a key the
+ * send route refuses with a clear message instead of pretending a bot joined.
+ */
+export const RECALL_LIVE = !!process.env.RECALL_API_KEY;
+
+export class NotetakerUnavailableError extends Error {
+  constructor() {
+    super('The notetaker isn’t set up on this server yet (RECALL_API_KEY is missing).');
+  }
+}
 
 function base(): string {
   return (process.env.RECALL_REGION_BASE_URL ?? 'https://us-west-2.recall.ai').trim().replace(/\/$/, '');
@@ -74,10 +83,7 @@ export async function createBot(params: {
   /** Chat message posted on join; omitted when the banner setting is off. */
   joinMessage?: string | null;
 }): Promise<{ id: string }> {
-  if (!RECALL_LIVE) {
-    const tag = /notadmit/i.test(params.meetingUrl) ? 'notadmit_' : '';
-    return { id: `mock_${tag}${params.callId}_${Date.now()}` };
-  }
+  if (!RECALL_LIVE) throw new NotetakerUnavailableError();
 
   const body: Record<string, unknown> = {
     meeting_url: params.meetingUrl,
@@ -104,16 +110,13 @@ export async function createBot(params: {
 }
 
 export async function getBot(botId: string): Promise<RecallBot> {
-  if (!RECALL_LIVE) return mockBot(botId);
+  if (!RECALL_LIVE) throw new NotetakerUnavailableError();
   return recall<RecallBot>(`/bot/${botId}/`);
 }
 
 /** Remove the bot from the call. Recording so far is kept and finalized. */
 export async function removeBot(botId: string): Promise<void> {
-  if (!RECALL_LIVE) {
-    mockRemoved.set(botId, Date.now());
-    return;
-  }
+  if (!RECALL_LIVE) throw new NotetakerUnavailableError();
   try {
     await recall(`/bot/${botId}/leave_call/`, { method: 'POST' });
   } catch (e) {
@@ -229,41 +232,4 @@ export function verifyRecallWebhook(headers: Headers, rawBody: string, secret: s
     const got = Buffer.from(sig, 'base64');
     return got.length === expected.length && timingSafeEqual(got, expected);
   });
-}
-
-/* ---------------------------------- mock ---------------------------------- */
-// Offline demo: a mock bot walks joining → waiting room → recording → done
-// on a timer. A link containing "notadmit" is declined in the waiting room.
-
-const mockRemoved = new Map<string, number>();
-
-function mockBot(botId: string): RecallBot {
-  const created = Number(botId.split('_').pop()) || Date.now();
-  const t = (s: number) => new Date(created + s * 1000).toISOString();
-  const elapsed = (Date.now() - created) / 1000;
-  const removedAt = mockRemoved.get(botId);
-  const declined = botId.includes('notadmit');
-  const steps: [number, string, string | null][] = declined
-    ? [
-        [0, 'joining_call', null],
-        [3, 'in_waiting_room', null],
-        [8, 'call_ended', 'bot_kicked_from_waiting_room'],
-        [9, 'done', null],
-      ]
-    : [
-        [0, 'joining_call', null],
-        [3, 'in_waiting_room', null],
-        [6, 'in_call_recording', null],
-        [20, 'call_ended', 'timeout_exceeded_everyone_left'],
-        [21, 'done', null],
-      ];
-  const changes = steps
-    .filter(([s]) => s <= elapsed && (!removedAt || created + s * 1000 <= removedAt))
-    .map(([s, code, sub]) => ({ code, sub_code: sub, created_at: t(s) }));
-  if (removedAt && !changes.some((c) => c.code === 'done')) {
-    const at = new Date(removedAt).toISOString();
-    changes.push({ code: 'call_ended', sub_code: 'bot_received_leave_call', created_at: at });
-    changes.push({ code: 'done', sub_code: null, created_at: at });
-  }
-  return { id: botId, meeting_url: null, status_changes: changes, recordings: [] };
 }

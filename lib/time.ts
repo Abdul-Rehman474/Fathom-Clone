@@ -24,7 +24,7 @@ export function formatDate(d: string | Date): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-/** "September 2026" — used for month grouping. */
+/** "September 2026": used for month grouping. */
 export function formatMonth(d: string | Date): string {
   const date = typeof d === 'string' ? new Date(d) : d;
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });

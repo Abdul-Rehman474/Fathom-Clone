@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Per-user, per-minute rate limit for the Ask endpoints (architecture.md §11).
- * In-memory sliding window — good enough per instance; Prompt 6 hardens this
+ * In-memory sliding window: good enough per instance; Prompt 6 hardens this
  * into a durable DB counter. Never throws.
  */
 const buckets = new Map<string, number[]>();

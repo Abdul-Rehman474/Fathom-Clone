@@ -115,7 +115,7 @@ export function ReadOnlyView({
               {actionItems.map((a) => (
                 <li key={a.id} className="text-sm text-text-2">
                   {a.done ? '☑' : '☐'} {a.text}
-                  {a.assignee ? ` — ${a.assignee}` : ''}
+                  {a.assignee ? ` (${a.assignee})` : ''}
                 </li>
               ))}
             </ul>

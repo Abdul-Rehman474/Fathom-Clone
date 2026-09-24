@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2, RotateCcw, UserMinus } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toaster';
 import { BotLifecycle, botHeadline, useLiveStatus, type LiveStatus } from '@/components/call/bot-status';
@@ -60,20 +61,28 @@ export function NotetakerLive({
       <p className={failed ? 'micro-label mb-3 !text-danger' : 'micro-label mb-3'}>
         {failed ? 'Notetaker stopped' : 'Notetaker'}
       </p>
-      <h2
-        className={
-          variant === 'page'
-            ? 'font-display text-3xl font-semibold tracking-tight'
-            : 'font-display text-2xl font-semibold tracking-tight'
-        }
-      >
-        {head.title}
-      </h2>
-      {failed ? (
-        <p className="mt-3 text-text-2">{error ?? 'The notetaker could not record this meeting.'}</p>
-      ) : (
-        <p className="mt-3 text-text-2">{head.body}</p>
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={`${status}:${error ?? ''}`}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <h2
+            className={
+              variant === 'page'
+                ? 'font-display text-3xl font-semibold tracking-tight'
+                : 'font-display text-2xl font-semibold tracking-tight'
+            }
+          >
+            {head.title}
+          </h2>
+          <p className="mt-3 text-text-2">
+            {failed ? (error ?? 'The notetaker could not record this meeting.') : head.body}
+          </p>
+        </motion.div>
+      </AnimatePresence>
 
       {!failed && <BotLifecycle status={status} className="mt-8" />}
 

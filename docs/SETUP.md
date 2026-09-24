@@ -1,4 +1,4 @@
-# Setup & Security — what you need to plug in
+# Setup & Security: what you need to plug in
 
 This app is built to **run end-to-end with only Supabase configured**, because
 all the paid AI/meeting providers run in mock mode (`MOCK_PROVIDERS=true`). You
@@ -6,7 +6,7 @@ add real keys only when you want live transcription, live AI, or real bots.
 
 ---
 
-## Tier 1 — required to run and test at all (just Supabase)
+## Tier 1: required to run and test at all (just Supabase)
 
 | Key | Where to get it | Used for |
 |---|---|---|
@@ -14,7 +14,7 @@ add real keys only when you want live transcription, live AI, or real bots.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | same page | Client/server RLS access |
 | `SUPABASE_SERVICE_ROLE_KEY` | same page (**secret**) | Webhooks, share pages, delete-account |
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` locally | Redirects, webhook callback URLs |
-| `MOCK_PROVIDERS` | set to `true` | Fixture transcript/summary/bot data |
+| `MOCK_PROVIDERS` | `true` only for keyless demos | Sample transcript/summary for uploads. Never affects the notetaker, which is always real |
 
 **Steps**
 1. Create a Supabase project.
@@ -23,7 +23,7 @@ add real keys only when you want live transcription, live AI, or real bots.
 3. Auth → Providers → enable **Google**. Add redirect URLs:
    `http://localhost:3000/auth/callback` and your prod URL.
    (Google sign-in also needs a Google OAuth client ID/secret entered *in the
-   Supabase dashboard* — this is separate from the Meet API below.)
+   Supabase dashboard*: this is separate from the Meet API below.)
 4. Copy `.env.example` → `.env.local`, fill the five keys above, keep
    `MOCK_PROVIDERS=true`.
 5. `npm install && npm run dev` → sign in → onboarding → the seeded demo call is
@@ -34,7 +34,7 @@ the call page, Ask, search, highlights, playlists, sharing, settings.
 
 ---
 
-## Tier 2 — real AI (optional; set `MOCK_PROVIDERS=false`)
+## Tier 2: real AI (optional; set `MOCK_PROVIDERS=false`)
 
 | Key | Provider | Notes |
 |---|---|---|
@@ -44,7 +44,7 @@ the call page, Ask, search, highlights, playlists, sharing, settings.
 | `DEEPGRAM_API_KEY` | console.deepgram.com | Transcription (nova-3) |
 | `DEEPGRAM_WEBHOOK_SECRET` | you choose a random string | Verifies the async callback |
 
-The LLM is **Groq**, not Claude — summaries use Groq JSON mode (validated with
+The LLM is **Groq**, not Claude: summaries use Groq JSON mode (validated with
 Zod, one retry) and Ask streams from Groq. LLM and transcription are gated
 independently: with only a Deepgram key set and no Groq key, transcription is
 live and summaries fall back to the deterministic mock.
@@ -52,20 +52,20 @@ live and summaries fall back to the deterministic mock.
 **Deepgram locally:** its callback is async, so it must reach a public URL. On
 localhost run a tunnel (`cloudflared tunnel --url http://localhost:3000` or
 `ngrok http 3000`), set `NEXT_PUBLIC_SITE_URL` to the tunnel URL, and set
-`MOCK_PROVIDERS=false`. Without a tunnel, keep `MOCK_PROVIDERS=true` — the
+`MOCK_PROVIDERS=false`. Without a tunnel, keep `MOCK_PROVIDERS=true`: the
 pipeline still runs end-to-end on fixtures. On Vercel the deployed URL works
 directly.
 
 ---
 
-## Tier 3 — real meetings (deferred to Prompts 3–5; seams already in place)
+## Tier 3: real meetings (deferred to Prompts 3–5; seams already in place)
 
 | Key | Provider |
 |---|---|
 | `RECALL_API_KEY`, `RECALL_REGION_BASE_URL`, `RECALL_WEBHOOK_SECRET` | Recall.ai bot |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Meet REST API (create links) |
 | `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET` | Zoom API (create links) |
-| `TOKEN_ENC_KEY` | 32-byte base64, `openssl rand -base64 32` — encrypts stored OAuth tokens |
+| `TOKEN_ENC_KEY` | 32-byte base64, `openssl rand -base64 32`: encrypts stored OAuth tokens |
 
 The "Create meeting", "Send notetaker", and PiP overlay UIs are built and call
 typed service seams that return a `not_configured` result until these land.
@@ -87,7 +87,7 @@ typed service seams that return a `not_configured` result until these land.
   client-supplied id.
 - **Prompt-injection hygiene:** transcripts are wrapped as `<transcript>` data
   with an instruction to ignore embedded commands before going to the LLM.
-- **OAuth tokens** are stored AES-GCM-encrypted (`TOKEN_ENC_KEY`) — lands with
+- **OAuth tokens** are stored AES-GCM-encrypted (`TOKEN_ENC_KEY`): lands with
   the connectors in Prompt 3.
 - **Rate limiting** on the Ask endpoints (per-user DB counter).
 
@@ -97,5 +97,5 @@ typed service seams that return a `not_configured` result until these land.
 - Google Cloud OAuth consent screen stays in **Testing**; add evaluator emails
   as test users.
 - Never commit `.env.local` (already gitignored).
-- The reference `FATHOM_CLONE.docx` is gitignored and purged from history — keep
+- The reference `FATHOM_CLONE.docx` is gitignored and purged from history: keep
   screenshots out of the repo.

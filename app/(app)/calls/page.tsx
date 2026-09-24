@@ -11,6 +11,7 @@ import { TimestampChip } from '@/components/ui/chips';
 import { formatMonth, formatDate } from '@/lib/time';
 import { StatusPoller } from '@/components/call/status-poller';
 import { isTerminal } from '@/lib/pipeline/status';
+import { Rise } from '@/components/ui/motion';
 
 export const metadata = { title: 'My Calls' };
 
@@ -99,9 +100,9 @@ export default async function CallsPage({
         <header className="mb-10">
           <p className="micro-label mb-3">{greeting()}, {firstName}</p>
           <h1 className="max-w-xl font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl">
-            Your meetings,
+            Your meetings
             <br />
-            <span className="text-muted">organized and understood.</span>
+            <span className="text-muted">and what came out of them.</span>
           </h1>
           <div className="mt-6 flex flex-wrap gap-3">
             <NewMeetingDialog>
@@ -136,8 +137,10 @@ export default async function CallsPage({
               <section key={month}>
                 <h2 className="mb-1 font-display text-sm font-semibold text-text-3">{month}</h2>
                 <div className="border-t border-border">
-                  {monthCalls.map((c) => (
-                    <MeetingRow key={c.id} call={c} />
+                  {monthCalls.map((c, i) => (
+                    <Rise key={c.id} index={i}>
+                      <MeetingRow call={c} />
+                    </Rise>
                   ))}
                 </div>
               </section>

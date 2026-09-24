@@ -35,7 +35,7 @@ export default async function PlaylistsPage() {
       <PageHeading
         eyebrow="Library"
         title="Playlists"
-        description="Collections of highlights from across your calls — for feedback, training and sharing."
+        description="Group highlights from different calls to share for feedback or training."
         actions={<NewPlaylistButton />}
       />
 

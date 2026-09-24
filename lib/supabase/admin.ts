@@ -2,7 +2,7 @@ import 'server-only';
 import { createClient } from '@supabase/supabase-js';
 
 /**
- * Service-role client — BYPASSES RLS. Server only.
+ * Service-role client: BYPASSES RLS. Server only.
  * Used exclusively for: webhook handlers (no user session), public share-page
  * reads after token checks, and the delete-account admin route.
  * The `server-only` import makes importing this from a client bundle a build

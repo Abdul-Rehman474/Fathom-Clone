@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   const rl = await checkRateLimit(supabase, user.id, 'ask', 20);
   if (!rl.ok) {
     return NextResponse.json(
-      { error: 'rate_limited', message: 'You’re asking a lot — give it a minute and try again.' },
+      { error: 'rate_limited', message: 'Too many questions at once. Wait a minute and try again.' },
       { status: 429 },
     );
   }

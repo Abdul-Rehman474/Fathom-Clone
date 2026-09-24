@@ -266,7 +266,7 @@ function RecordUploadPanel({ onDone }: { onDone: () => void }) {
         title: file.name.replace(/\.[^.]+$/, ''),
         onProgress: setProgress,
       });
-      toast.success('Uploaded — processing started');
+      toast.success('Uploaded. Processing has started.');
       onDone();
       router.push(`/calls/${callId}`);
     } catch (e) {
@@ -292,7 +292,7 @@ function RecordUploadPanel({ onDone }: { onDone: () => void }) {
         title: 'Tab recording',
         onProgress: setProgress,
       });
-      toast.success('Recording saved — processing started');
+      toast.success('Recording saved. Processing has started.');
       onDone();
       router.push(`/calls/${callId}`);
     } catch (e) {

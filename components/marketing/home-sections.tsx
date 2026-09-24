@@ -5,24 +5,24 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProductFrame, type FrameKind } from '@/components/marketing/product-frame';
 
-/** Clarity / Momentum / Ease — clickable word tabs driving a product frame. */
+/** Clarity / Momentum / Ease: clickable word tabs driving a product frame. */
 const STEPS: { word: string; tag: string; body: string; frame: FrameKind }[] = [
   {
     word: 'Clarity',
-    tag: 'Unforgettable meetings — quite literally',
-    body: 'Every call becomes a searchable, summarized record, so the details never slip away.',
+    tag: 'Find anything anyone said',
+    body: 'Search every transcript at once and jump straight to the moment it was said.',
     frame: 'summary',
   },
   {
     word: 'Momentum',
-    tag: 'Action items that actually happen',
-    body: 'Owners and timestamps are captured automatically, and follow-ups are one click away.',
+    tag: 'Know who is doing what',
+    body: 'Each action item comes with an owner and a timestamp you can click to hear it again.',
     frame: 'ask',
   },
   {
     word: 'Ease',
-    tag: 'Nothing to install',
-    body: 'Runs in your browser. Send a notetaker, record a tab, or upload a file — same clean result.',
+    tag: 'Works in the browser',
+    body: 'Send a notetaker, record a browser tab, or upload a file. You get the same notes either way.',
     frame: 'capture',
   },
 ];
@@ -58,9 +58,9 @@ export function ClarityMomentumEase() {
 
 /** Feature carousel: arrows + dots, crossfade by key. */
 const SLIDES: { caption: string; frame: FrameKind }[] = [
-  { caption: 'Capture notes your way — bot or no bot — and stay present in the meeting.', frame: 'capture' },
-  { caption: 'AI summaries, key moments and action items the moment your call ends.', frame: 'summary' },
-  { caption: 'Ask anything across every meeting, with sources you can jump to.', frame: 'ask' },
+  { caption: 'Send the notetaker, or record the tab yourself if you would rather not have a bot in the call.', frame: 'capture' },
+  { caption: 'A summary, the decisions and the action items, usually within a minute of hanging up.', frame: 'summary' },
+  { caption: 'Ask a question about any of your meetings and get an answer with timestamps.', frame: 'ask' },
 ];
 
 export function FeatureCarousel() {

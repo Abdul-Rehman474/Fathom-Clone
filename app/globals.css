@@ -57,9 +57,9 @@
   --tag-feedback: #e08a3c;
 
   /* typography */
-  --font-heading: 'Epic Pro', Arial, Helvetica, sans-serif;
-  --font-body: Arial, Helvetica, sans-serif;
-  --font-mono: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+  --font-heading: var(--font-display-face), Arial, Helvetica, sans-serif;
+  --font-body: var(--font-body-face), Arial, Helvetica, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @theme inline {

@@ -44,10 +44,10 @@ export const SOLUTIONS: Record<string, Solution> = {
     audience: 'customer success',
     headline: 'Customer success that actually scales',
     intro:
-      'Stay present in every call while Fathom captures the notes, action items and follow-ups — so nothing falls through the cracks across renewals and handoffs.',
+      'Stay present in every call while Fathom captures the notes, action items and follow-ups, so nothing falls through the cracks across renewals and handoffs.',
     rows: [
       { title: 'Stay present with customers', body: 'Let the notetaker handle the record while you focus on the relationship.' },
-      { title: 'Never lose context — even across handoffs', body: 'Every account’s history is searchable and shareable with the next owner.' },
+      { title: 'Keep the context through handoffs', body: 'Every account’s history is searchable and shareable with the next owner.' },
       { title: 'Turn insight into action', body: 'Auto-extracted action items and highlights keep the team moving.' },
     ],
     lifecycle: [
@@ -88,7 +88,7 @@ export const SOLUTIONS: Record<string, Solution> = {
     slug: 'sales',
     audience: 'sales',
     headline: 'Close more by staying in the conversation',
-    intro: 'Fathom captures every call so reps can focus on the deal, not note-taking — with summaries and next steps ready the moment you hang up.',
+    intro: 'Fathom captures every call so reps can focus on the deal, not note taking, with summaries and next steps ready the moment you hang up.',
     rows: [
       { title: 'Be fully present', body: 'No more typing while you should be listening.' },
       { title: 'Never miss a next step', body: 'Action items with owners and timestamps, automatically.' },
@@ -141,7 +141,7 @@ export interface Integration {
 export const INTEGRATIONS: Integration[] = [
   { slug: 'zoom', name: 'Zoom', category: 'Meeting platforms', blurb: 'Send a notetaker or create meetings.', available: true },
   { slug: 'google-meet', name: 'Google Meet', category: 'Meeting platforms', blurb: 'Create Meet links and record.', available: true },
-  { slug: 'teams', name: 'Microsoft Teams', category: 'Meeting platforms', blurb: 'Paste a Teams link — no connection needed.', available: true },
+  { slug: 'teams', name: 'Microsoft Teams', category: 'Meeting platforms', blurb: 'Paste a Teams link. No connection needed.', available: true },
   { slug: 'chatgpt', name: 'ChatGPT', category: 'AI', blurb: 'Bring your meeting context to ChatGPT.', available: false },
   { slug: 'claude', name: 'Claude', category: 'AI', blurb: 'Analyze meetings with Claude.', available: false },
   { slug: 'hubspot', name: 'HubSpot', category: 'CRM', blurb: 'Sync recaps to HubSpot.', available: false },
@@ -161,7 +161,7 @@ export const PRICING = [
 
 export const WHATS_NEW = [
   { date: '2026-09-20', title: 'Ask Fathom across all your calls', tag: 'New', body: 'Ask questions across your whole meeting history and get answers with citations that jump to the moment.' },
-  { date: '2026-09-10', title: 'Bot-free tab recording', tag: 'New', body: 'Record any meeting tab with your mic mixed in — no bot required.' },
+  { date: '2026-09-10', title: 'Bot-free tab recording', tag: 'New', body: 'Record any meeting tab with your mic mixed in. No bot required.' },
   { date: '2026-08-28', title: 'Playlists of highlights', tag: 'Improved', body: 'Assemble key moments across calls into shareable playlists.' },
   { date: '2026-08-15', title: 'Six summary templates', tag: 'New', body: 'General, Sales, Customer Success, 1:1, Stand-up and Interview.' },
 ];

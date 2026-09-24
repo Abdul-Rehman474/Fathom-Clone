@@ -4,7 +4,7 @@ import type { SummaryContent } from '@/lib/types';
 /**
  * Seeds the "Welcome to Fathom" demo call for a user (UI.md §14): a fully
  * processed call with transcript, summary, action items, highlights across all
- * tag colours, and one playlist — so the first screen is never empty.
+ * tag colours, and one playlist: so the first screen is never empty.
  *
  * Idempotent: skips if the user already has a demo call.
  */
@@ -17,22 +17,22 @@ interface Seg {
 }
 
 const SEGMENTS: Seg[] = [
-  { speaker: 'A', start_ms: 0, end_ms: 8000, text: "Welcome everyone — this is the product strategy check-in. Today I want to lock the beta scope, the pricing experiment, and who owns what before Friday." },
+  { speaker: 'A', start_ms: 0, end_ms: 8000, text: "Welcome everyone, this is the product strategy check-in. Today I want to lock the beta scope, the pricing experiment, and who owns what before Friday." },
   { speaker: 'B', start_ms: 8000, end_ms: 20000, text: "Sounds good. On the beta, I think we should cap it at fifty workspaces so support can actually keep up. Last time we opened it wide and drowned." },
   { speaker: 'A', start_ms: 20000, end_ms: 30000, text: "Agreed, fifty is the cap. Let's treat that as decided. Sara, can you own the beta checklist and the invite copy?" },
-  { speaker: 'C', start_ms: 30000, end_ms: 44000, text: "Yes, I'll own the beta checklist. I'll have a draft of the invite copy by Wednesday and the full checklist by Friday. One open question — do we gate it behind a waitlist or invite directly?" },
+  { speaker: 'C', start_ms: 30000, end_ms: 44000, text: "Yes, I'll own the beta checklist. I'll have a draft of the invite copy by Wednesday and the full checklist by Friday. One open question: do we gate it behind a waitlist or invite directly?" },
   { speaker: 'A', start_ms: 44000, end_ms: 52000, text: "Invite directly for the first fifty, waitlist after that. Next, pricing. The objection we keep hearing is the per-seat cost for small teams." },
   { speaker: 'B', start_ms: 52000, end_ms: 68000, text: "Right. My proposal is a flat team tier at ninety-nine a month up to ten seats. It reframes the conversation away from per-seat and the early numbers say it converts better." },
   { speaker: 'C', start_ms: 68000, end_ms: 78000, text: "I like it, but we should A/B it rather than switch everyone. Otherwise we can't tell if it's the price or the packaging doing the work." },
   { speaker: 'A', start_ms: 78000, end_ms: 90000, text: "Decision: we run a two-week A/B on the flat team tier against per-seat, starting Monday. Marcus, can you set up the experiment and the dashboard?" },
   { speaker: 'B', start_ms: 90000, end_ms: 100000, text: "I'll set up the pricing A/B and the dashboard. I'll need the final copy from Sara for the flat-tier variant by Thursday." },
-  { speaker: 'A', start_ms: 100000, end_ms: 112000, text: "Good. Last thing — the onboarding drop-off. We lose about a third of new users at the connect-your-calendar step. That feels like the biggest lever right now." },
+  { speaker: 'A', start_ms: 100000, end_ms: 112000, text: "Good. Last thing: the onboarding drop-off. We lose about a third of new users at the connect-your-calendar step. That feels like the biggest lever right now." },
   { speaker: 'C', start_ms: 112000, end_ms: 126000, text: "I dug into that. Most of them skip it and never come back. I think we should let people finish onboarding first and prompt for calendar later, in context." },
-  { speaker: 'A', start_ms: 126000, end_ms: 138000, text: "Let's do that — make the calendar step skippable and add a contextual prompt after the first recording. Sara, add it to the checklist. Anything else? No? Great, thanks everyone." },
+  { speaker: 'A', start_ms: 126000, end_ms: 138000, text: "Let's do that. Make the calendar step skippable and add a contextual prompt after the first recording. Sara, add it to the checklist. Anything else? No? Great, thanks everyone." },
 ];
 
 const SUMMARY: SummaryContent = {
-  title: 'Product Strategy — Beta Scope, Pricing & Onboarding',
+  title: 'Product strategy: beta scope, pricing and onboarding',
   overview:
     'The team locked the beta at 50 workspaces (invite-first, then waitlist), agreed to A/B test a flat $99/month team tier against per-seat pricing for two weeks, and decided to make the calendar-connect onboarding step skippable with a contextual prompt after the first recording.',
   purpose:
@@ -97,7 +97,7 @@ const ATTENDEES = [
 
 // tag name → highlight at a moment
 const DEMO_HIGHLIGHTS: { tag: string; start_ms: number; note: string }[] = [
-  { tag: 'Highlight', start_ms: 20000, note: 'Beta capped at 50 — decided' },
+  { tag: 'Highlight', start_ms: 20000, note: 'Beta capped at 50 (decided)' },
   { tag: 'Positive Reaction', start_ms: 52000, note: 'Flat team tier proposal' },
   { tag: 'Needs Review', start_ms: 78000, note: 'Pricing A/B plan to sanity-check' },
   { tag: 'Feedback', start_ms: 100000, note: 'Onboarding drop-off insight' },
@@ -109,7 +109,7 @@ export async function seedDemoCall(supabase: SupabaseClient, userId: string): Pr
     .from('calls')
     .select('id')
     .eq('owner_id', userId)
-    .eq('title', 'Welcome to Fathom — Product Strategy (demo)')
+    .eq('title', 'Welcome to Fathom: product strategy (demo)')
     .maybeSingle();
   if (existing) return;
 
@@ -120,7 +120,7 @@ export async function seedDemoCall(supabase: SupabaseClient, userId: string): Pr
     .insert({
       owner_id: userId,
       visibility: 'private',
-      title: 'Welcome to Fathom — Product Strategy (demo)',
+      title: 'Welcome to Fathom: product strategy (demo)',
       platform: 'meet',
       source: 'bot',
       status: 'ready',

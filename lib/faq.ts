@@ -6,7 +6,7 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: 'Do I need to install anything?',
-    a: 'No — this build runs entirely in your browser. Tab recording works in Chrome and Edge.',
+    a: 'No. This build runs entirely in your browser. Tab recording works in Chrome and Edge.',
   },
   {
     q: 'How do highlights work?',

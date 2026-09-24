@@ -14,11 +14,11 @@ export interface Utterance {
  */
 const BASE_LINES: { speaker: number; text: string }[] = [
   { speaker: 0, text: "Thanks for joining. Let's start with a quick status on the launch and then talk through the open risks." },
-  { speaker: 1, text: "Sure. Engineering is on track — the API is code-complete and we're finishing tests this week." },
+  { speaker: 1, text: "Sure. Engineering is on track. The API is code-complete and we're finishing tests this week." },
   { speaker: 2, text: "On design, the onboarding flow is done and I handed the marketing screens over yesterday." },
   { speaker: 0, text: "Great. The biggest risk I see is the third-party rate limits during the launch spike. Can we cache aggressively?" },
   { speaker: 1, text: "Yes, we can cache the read paths for five minutes. I'll add that and put it behind a flag so we can tune it live." },
-  { speaker: 2, text: "One thing from user testing — people miss the share button. I'd like to make it more prominent before we ship." },
+  { speaker: 2, text: "One thing from user testing: people miss the share button. I'd like to make it more prominent before we ship." },
   { speaker: 0, text: "Agreed. Let's make the share action primary on the call page. That's decided. Who owns it?" },
   { speaker: 2, text: "I'll own the share-button change and have it in review by Thursday." },
   { speaker: 1, text: "I'll handle the caching and the rate-limit dashboard. We should also decide the rollout percentage." },
@@ -41,7 +41,7 @@ export function mockUtterances(durationSec: number): Utterance[] {
 export function mockSummary(utts: Utterance[]): SummaryOutput {
   const ms = (i: number) => Math.round(utts[i].start * 1000);
   return {
-    title: 'Launch Readiness — Risks, Caching & Rollout',
+    title: 'Launch readiness: risks, caching and rollout',
     overview:
       'The team confirmed the launch is on track (API code-complete, design done), agreed to cache read paths behind a flag to survive third-party rate limits, decided to make the share action primary on the call page, and set a rollout starting at 10% doubling daily while error rates stay flat.',
     purpose: 'Review launch status, surface risks, and assign owners before shipping.',

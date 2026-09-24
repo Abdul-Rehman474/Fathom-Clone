@@ -80,7 +80,7 @@ export function ProductFrame({ kind, className }: { kind: FrameKind; className?:
           <div key={who} className="flex items-center gap-3 py-1.5 text-sm">
             <span className="size-3.5 rounded-[3px] border border-border-strong" />
             <span className="text-off-white">{who}</span>
-            <span className="text-text-3">— {what}</span>
+            <span className="text-text-3">{what}</span>
           </div>
         ))}
       </Chrome>
@@ -110,10 +110,10 @@ export function ProductFrame({ kind, className }: { kind: FrameKind; className?:
   return (
     <Chrome title="Team Calls" className={className}>
       {[
-        ['Intro call — Northwind', 'Anne Lee', '42 min'],
-        ['Demo — Globex', 'Marcus Chen', '31 min'],
-        ['QBR — Initech', 'Sara Ruiz', '58 min'],
-        ['Renewal — Acme', 'Cooper Dor', '27 min'],
+        ['Northwind intro call', 'Anne Lee', '42 min'],
+        ['Globex demo', 'Marcus Chen', '31 min'],
+        ['Initech QBR', 'Sara Ruiz', '58 min'],
+        ['Acme renewal', 'Cooper Dor', '27 min'],
       ].map(([t, who, d]) => (
         <div key={t} className="flex items-center justify-between border-b border-border py-3 last:border-0">
           <div>

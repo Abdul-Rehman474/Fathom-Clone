@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 
-/** Settings row — editorial divider row (no floating card): icon, title +
+/** Settings row: editorial divider row (no floating card): icon, title +
  *  description, control on the right. */
 export function SettingsRow({
   icon,

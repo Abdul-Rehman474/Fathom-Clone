@@ -60,14 +60,14 @@ export function AuthPanel({ mode }: { mode: 'signin' | 'signup' }) {
     }
   }
 
-  const title = mode === 'signup' ? 'Meetings, understood.' : 'Welcome back.';
+  const title = mode === 'signup' ? 'Create your account' : 'Sign in';
 
   return (
     <TooltipProvider delayDuration={150}>
       <div>
-        <p className="micro-label mb-4">{mode === 'signup' ? 'Create your account' : 'Sign in'}</p>
+        <p className="micro-label mb-4">{BRAND_NAME}</p>
         <h1 className="font-display text-4xl font-semibold tracking-tight text-off-white">{title}</h1>
-        <p className="mt-3 text-text-2">Connect your work email to get started in minutes.</p>
+        <p className="mt-3 text-text-2">{mode === 'signup' ? 'Use your Google account. It takes about a minute.' : 'Use the Google account you signed up with.'}</p>
 
         {authError && (
           <p role="alert" className="mt-6 border-l-2 border-danger pl-3 text-sm text-danger">

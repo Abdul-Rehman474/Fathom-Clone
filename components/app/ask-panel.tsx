@@ -52,7 +52,7 @@ export function AskPanel() {
         body: JSON.stringify({ question, scope }),
       });
       if (!res.ok || !res.body) {
-        const msg = res.status === 429 ? 'Rate limited — try again shortly.' : 'Ask failed.';
+        const msg = res.status === 429 ? 'Too many questions at once. Try again in a minute.' : 'Ask failed.';
         setMessages((m) => updateLast(m, msg));
         return;
       }

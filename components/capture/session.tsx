@@ -193,7 +193,7 @@ export function CaptureSessionProvider({ children }: { children: React.ReactNode
         .select('id, title, platform, status, recording_started_at, scratchpad')
         .eq('owner_id', user.id)
         .eq('source', 'bot')
-        .in('status', ['scheduled', 'joining', 'waiting_admit', 'recording'])
+        .in('status', ['joining', 'waiting_admit', 'recording'])
         .gte('created_at', since)
         .order('created_at', { ascending: false })
         .limit(1);

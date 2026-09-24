@@ -26,17 +26,22 @@ export function ConnectNotice() {
   const router = useRouter();
   const connected = params.get('connected');
   const failed = params.get('connect_error');
+  const detail = params.get('connect_detail');
 
   useEffect(() => {
     if (!connected && !failed) return;
     if (connected) toast.success(`${NAMES[connected] ?? 'Account'} connected`);
-    if (failed) toast.error(REASONS[failed] ?? REASONS.exchange_failed);
+    if (failed) {
+      const reason = REASONS[failed] ?? REASONS.exchange_failed;
+      toast.error(detail ? `${reason} Provider said: ${detail}` : reason);
+    }
     const rest = new URLSearchParams(params.toString());
     rest.delete('connected');
     rest.delete('connect_error');
+    rest.delete('connect_detail');
     const qs = rest.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [connected, failed, params, pathname, router]);
+  }, [connected, failed, detail, params, pathname, router]);
 
   return null;
 }

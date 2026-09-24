@@ -24,13 +24,15 @@ export function useLiveStatus(
   { intervalMs = 3000, onChange }: { intervalMs?: number; onChange?: (s: LiveStatus) => void } = {},
 ): [LiveStatus, (s: LiveStatus) => void] {
   const [live, setLive] = useState<LiveStatus>(initial);
-  const active = !!callId && !isTerminal(live.status);
+  // `scheduled` means no bot was sent yet: nothing changes until the user acts.
+  const active = !!callId && !isTerminal(live.status) && live.status !== 'scheduled';
 
   useEffect(() => {
     if (!active) return;
     let stop = false;
     let last = live;
     const t = setInterval(async () => {
+      if (document.visibilityState !== 'visible') return;
       try {
         const res = await fetch(`/api/calls/${callId}/status`, { cache: 'no-store' });
         if (!res.ok || stop) return;
@@ -97,7 +99,9 @@ export function BotLifecycle({ status, className }: { status: CallStatus; classN
                   transition={{ type: 'spring', stiffness: 400, damping: 22 }}
                 />
               </span>
-              <span className={cn('transition-colors duration-300', state === 'todo' ? 'text-text-3' : 'text-off-white')}>
+              <span
+                className={cn('transition-colors duration-300', state === 'todo' ? 'text-text-3' : 'text-off-white')}
+              >
                 {st.label}
               </span>
               <AnimatePresence mode="wait" initial={false}>
@@ -135,6 +139,10 @@ export function BotLifecycle({ status, className }: { status: CallStatus; classN
 export function botHeadline(status: CallStatus, botName = 'The notetaker'): { title: string; body: string } {
   switch (status) {
     case 'scheduled':
+      return {
+        title: 'No notetaker sent yet',
+        body: 'Send one when your meeting is about to start and it will ask to join.',
+      };
     case 'joining':
       return { title: `${botName} is on its way`, body: 'It normally shows up in the meeting within a minute.' };
     case 'waiting_admit':
@@ -147,7 +155,10 @@ export function botHeadline(status: CallStatus, botName = 'The notetaker'): { ti
     case 'uploading':
     case 'transcribing':
     case 'summarizing':
-      return { title: 'Writing up your notes', body: 'The meeting has ended. The transcript and summary take about a minute.' };
+      return {
+        title: 'Writing up your notes',
+        body: 'The meeting has ended. The transcript and summary take about a minute.',
+      };
     case 'ready':
       return { title: 'Your notes are ready', body: 'Open the call to read the transcript and summary.' };
     case 'failed':

@@ -73,7 +73,7 @@ All converge on one `calls` record and one pipeline.
 ## Local setup
 
 1. Create a Supabase project. In the SQL editor, run **`supabase/schema.sql`**
-   (or the six `supabase/migrations/000*.sql` in order).
+   (or the seven `supabase/migrations/000*.sql` in order).
 2. Supabase → Auth → enable **Google**; add redirect
    `http://localhost:3000/auth/callback` (+ your prod URL).
 3. `cp .env.example .env.local` and fill `NEXT_PUBLIC_SUPABASE_URL`,

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { MOCK_PROVIDERS } from '@/lib/config';
 import { randomState } from '@/lib/crypto';
+import { safeNextPath } from '@/lib/utils';
 import { googleAuthUrl } from '@/lib/providers/google-meet';
 import { zoomAuthUrl } from '@/lib/providers/zoom';
 
@@ -9,7 +10,7 @@ import { zoomAuthUrl } from '@/lib/providers/zoom';
  *  stored in an httpOnly cookie. In mock mode, mark connected without OAuth. */
 export async function GET(request: NextRequest, ctx: { params: Promise<{ provider: string }> }) {
   const { provider } = await ctx.params;
-  const next = safeNext(request.nextUrl.searchParams.get('next'));
+  const next = safeNextPath(request.nextUrl.searchParams.get('next'), '/settings');
   if (provider !== 'google' && provider !== 'zoom') {
     return NextResponse.redirect(new URL('/settings', request.url));
   }
@@ -50,9 +51,4 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ provide
   });
   res.cookies.set(`oauth_next_${provider}`, next, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 600 });
   return res;
-}
-
-/** Only same-site paths: never an absolute or protocol-relative URL. */
-function safeNext(next: string | null): string {
-  return next && next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') ? next : '/settings';
 }

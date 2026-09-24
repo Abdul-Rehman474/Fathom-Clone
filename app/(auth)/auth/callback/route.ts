@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { postAuthPath } from '@/lib/onboarding';
+import { safeNextPath } from '@/lib/utils';
 
 /**
  * OAuth callback. Exchanges the code for a session, then routes to onboarding
@@ -9,7 +10,7 @@ import { postAuthPath } from '@/lib/onboarding';
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/calls';
+  const next = safeNextPath(searchParams.get('next'));
 
   if (!code) {
     // Provider returned an error (e.g. the user cancelled) or no code at all.

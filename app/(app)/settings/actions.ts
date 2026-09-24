@@ -48,8 +48,11 @@ export async function addTag(name: string, color: string) {
     .eq('user_id', user.id);
   await supabase.from('highlight_tags').insert({
     user_id: user.id,
-    name: z.string().min(1).max(60).parse(name),
-    color: z.string().max(9).parse(color),
+    name: z.string().trim().min(1).max(40).parse(name),
+    color: z
+      .string()
+      .regex(/^#[0-9a-f]{3,8}$/i)
+      .parse(color),
     position: count ?? 0,
   });
   revalidatePath('/settings');
@@ -59,7 +62,17 @@ export async function addTag(name: string, color: string) {
 export async function updateTag(id: string, patch: { name?: string; color?: string }) {
   const { supabase, user } = await requireUser();
   if (!user) return { ok: false };
-  await supabase.from('highlight_tags').update(patch).eq('id', id).eq('user_id', user.id);
+  const fields = z
+    .object({
+      name: z.string().trim().min(1).max(40).optional(),
+      color: z
+        .string()
+        .regex(/^#[0-9a-f]{3,8}$/i)
+        .optional(),
+    })
+    .safeParse(patch);
+  if (!fields.success) return { ok: false };
+  await supabase.from('highlight_tags').update(fields.data).eq('id', id).eq('user_id', user.id);
   revalidatePath('/settings');
   return { ok: true };
 }

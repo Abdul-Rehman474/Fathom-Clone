@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { safeNextPath } from '@/lib/utils';
 import { storeTokens } from '@/lib/providers/integrations';
 import { googleExchangeCode, googleAccountEmail } from '@/lib/providers/google-meet';
 import { zoomExchangeCode, zoomAccountEmail } from '@/lib/providers/zoom';
@@ -14,12 +15,16 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ provide
   const code = request.nextUrl.searchParams.get('code');
   const state = request.nextUrl.searchParams.get('state');
   const [cookieState, stateUser] = (request.cookies.get(`oauth_state_${provider}`)?.value ?? '').split('.');
-  const rawNext = request.cookies.get(`oauth_next_${provider}`)?.value ?? '';
-  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('\\') ? rawNext : '/settings';
+  const next = safeNextPath(request.cookies.get(`oauth_next_${provider}`)?.value, '/settings');
 
-  const fail = (reason: string) => {
+  const fail = (reason: string, detail?: string) => {
     const back = new URL(next, request.url);
     back.searchParams.set('connect_error', reason);
+    // Local development only: show the provider's own reason so setup
+    // problems are visible without reading the server log.
+    if (detail && process.env.NODE_ENV !== 'production') {
+      back.searchParams.set('connect_detail', detail.replace(/\s+/g, ' ').slice(0, 160));
+    }
     return NextResponse.redirect(back);
   };
 
@@ -32,9 +37,17 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ provide
       providerError,
       request.nextUrl.searchParams.get('error_description'),
     );
-    return fail(providerError === 'access_denied' ? 'cancelled' : 'provider_error');
+    const description = request.nextUrl.searchParams.get('error_description') ?? providerError;
+    return fail(providerError === 'access_denied' ? 'cancelled' : 'provider_error', description);
   }
-  if (!code || !state || !cookieState || state !== cookieState) return fail('state_mismatch');
+  if (!code || !state || !cookieState || state !== cookieState) {
+    return fail(
+      'state_mismatch',
+      !cookieState
+        ? 'No sign-in was started from this browser. Start from Settings, not from the provider’s own install button.'
+        : 'The sign-in state did not match.',
+    );
+  }
 
   const supabase = await createClient();
   const {
@@ -56,10 +69,13 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ provide
   } catch (e) {
     console.error(`oauth ${provider} exchange failed`, e);
     const msg = e instanceof Error ? e.message : '';
-    if (/redirect/i.test(msg)) return fail('redirect_mismatch');
-    if (/invalid_client|unauthorized_client|failed: 401/i.test(msg)) return fail('bad_client');
-    if (/save/i.test(msg)) return fail('save_failed');
-    return fail('exchange_failed');
+    // The provider's JSON reason, without anything that could carry a token.
+    const detail =
+      (msg.match(/"(?:reason|error_description|error)"\s*:\s*"([^"]{1,160})"/) ?? [])[1] ?? msg.slice(0, 120);
+    if (/redirect/i.test(msg)) return fail('redirect_mismatch', detail);
+    if (/invalid_client|unauthorized_client|failed: 401/i.test(msg)) return fail('bad_client', detail);
+    if (/save/i.test(msg)) return fail('save_failed', detail);
+    return fail('exchange_failed', detail);
   }
 
   const back = new URL(next, request.url);

@@ -56,7 +56,11 @@ export default async function CallsPage({
         ) : (
           <div>
             {hits.map((h) => (
-              <Link key={h.callId} href={`/calls/${h.callId}`} className="group block border-b border-border py-5 hover:translate-x-0.5 transition-transform">
+              <Link
+                key={h.callId}
+                href={`/calls/${h.callId}`}
+                className="group block border-b border-border py-5 hover:translate-x-0.5 transition-transform"
+              >
                 <div className="flex items-center justify-between">
                   <span className="font-display font-semibold group-hover:text-lime">{h.title}</span>
                   <span className="text-xs text-text-3 tnum">{formatDate(h.createdAt)}</span>
@@ -88,7 +92,17 @@ export default async function CallsPage({
   ]);
   const grouped = groupByMonth(calls);
   // Live status on the cards: poll only while some call is still active.
-  const activeIds = calls.filter((c) => !isTerminal(c.status)).map((c) => c.id);
+  // Only calls the server can move forward: a meeting created without a
+  // notetaker, or a browser recording that was abandoned, never changes on
+  // its own, so polling for it would never stop.
+  const activeIds = calls
+    .filter(
+      (c) =>
+        !isTerminal(c.status) &&
+        !(c.status === 'scheduled' && !c.bot_id) &&
+        !(c.source !== 'bot' && (c.status === 'recording' || c.status === 'uploading')),
+    )
+    .map((c) => c.id);
   const hasMore = page * pageSize < total;
   const firstName = (profile?.full_name ?? 'there').split(' ')[0];
 
@@ -98,7 +112,9 @@ export default async function CallsPage({
       <div className="min-w-0 flex-1">
         {/* Greeting / command header */}
         <header className="mb-10">
-          <p className="micro-label mb-3">{greeting()}, {firstName}</p>
+          <p className="micro-label mb-3">
+            {greeting()}, {firstName}
+          </p>
           <h1 className="max-w-xl font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl">
             Your meetings
             <br />
@@ -122,9 +138,7 @@ export default async function CallsPage({
         {calls.length === 0 ? (
           <div className="border-t border-border py-20 text-center">
             <p className="micro-label mb-3">No calls yet</p>
-            <p className="mx-auto max-w-sm text-muted">
-              Your meetings will appear here once you start capturing them.
-            </p>
+            <p className="mx-auto max-w-sm text-muted">Your meetings will appear here once you start capturing them.</p>
             <div className="mt-6 flex justify-center">
               <NewMeetingDialog>
                 <Button>Start a meeting →</Button>

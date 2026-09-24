@@ -9,15 +9,11 @@ export default async function JoinPage({ params }: { params: Promise<{ inviteTok
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect(`/login?next=/join/${inviteToken}`);
+  if (!user) redirect(`/login?next=/join/${encodeURIComponent(inviteToken)}`);
 
   // Look up the workspace by token with the service role (invitee isn't a member yet).
   const admin = createAdminClient();
-  const { data: ws } = await admin
-    .from('workspaces')
-    .select('id, name')
-    .eq('invite_token', inviteToken)
-    .maybeSingle();
+  const { data: ws } = await admin.from('workspaces').select('id, name').eq('invite_token', inviteToken).maybeSingle();
 
   if (!ws) {
     return (
@@ -30,7 +26,11 @@ export default async function JoinPage({ params }: { params: Promise<{ inviteTok
 
   await admin
     .from('workspace_members')
-    .upsert({ workspace_id: ws.id, user_id: user.id, role: 'member' }, { onConflict: 'workspace_id,user_id' });
+    // ignoreDuplicates: an existing member (or the owner) keeps their role.
+    .upsert(
+      { workspace_id: ws.id, user_id: user.id, role: 'member' },
+      { onConflict: 'workspace_id,user_id', ignoreDuplicates: true },
+    );
   await admin.from('profiles').update({ account_type: 'team', usage: 'team' }).eq('id', user.id);
 
   redirect('/team');

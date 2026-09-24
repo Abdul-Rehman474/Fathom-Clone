@@ -9,6 +9,20 @@ import type { CallStatus } from '@/lib/types';
 // A `done` found by polling starts transcription after the reply.
 export const maxDuration = 300;
 
+/**
+ * The call page, the overlay and My Calls can all poll the same call. Ask
+ * Recall at most once per call every few seconds; webhooks still apply
+ * changes immediately.
+ */
+const lastSync = new Map<string, number>();
+function shouldSync(callId: string): boolean {
+  const now = Date.now();
+  if (now - (lastSync.get(callId) ?? 0) < 5000) return false;
+  lastSync.set(callId, now);
+  if (lastSync.size > 500) for (const [k, t] of lastSync) if (now - t > 60_000) lastSync.delete(k);
+  return true;
+}
+
 const COLS = 'id, status, source, bot_id, error, failed_stage, recording_started_at';
 
 /**
@@ -27,7 +41,7 @@ export async function GET(_request: NextRequest, ctx: { params: Promise<{ id: st
   let { data: call } = await supabase.from('calls').select(COLS).eq('id', id).maybeSingle();
   if (!call) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
-  if (call.source === 'bot' && call.bot_id && BOT_ACTIVE.includes(call.status as CallStatus)) {
+  if (call.source === 'bot' && call.bot_id && BOT_ACTIVE.includes(call.status as CallStatus) && shouldSync(id)) {
     try {
       await syncBot(createAdminClient(), id, (fn) => after(fn));
       ({ data: call } = await supabase.from('calls').select(COLS).eq('id', id).maybeSingle());

@@ -201,3 +201,22 @@ npx tsc --noEmit && npx eslint . && npm run build
 The live two-account audit needs the service-role key and creates and
 deletes its own users. It is kept out of the repo because it reads secrets.
 It is the procedure described in §5 above.
+
+## Pre-Prompt 7 preflight (2026-09-24)
+
+| # | Priority | Finding | Fix | Status |
+|---|---|---|---|---|
+| 29 | P1 security | Any signed-in user could add themselves to any workspace whose id they knew (verified live: B joined A's workspace and read A's team call). | Migration 0007: members can only be added by the server after an invite check, or as owner of their own new workspace. | Fixed in 0007, verify after applying |
+| 30 | P1 security | Sign-in callback built `origin + next`; `next=@evil.com` redirected to another site. | `safeNextPath()` for the sign-in callback, login panel and OAuth start/callback. | Fixed, verified |
+| 31 | P2 security | Users could raise their own referral credits through the database API. | 0007 limits profile updates to profile fields. | Fixed in 0007 |
+| 32 | P2 security | Calls could be moved into a workspace the owner is not in. | 0007 `WITH CHECK` on calls insert/update. | Fixed in 0007 |
+| 33 | P2 security | No clickjacking or referrer protection (share tokens are in URLs). | `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`; `poweredByHeader` off. | Fixed, verified |
+| 34 | P1 perf | My Calls polled and fully refreshed every 4 s forever for calls that never change on their own (meeting without notetaker, abandoned tab recording). | Poll only progressable calls; one cycle at a time; paused in hidden tabs; 30 min cap. | Fixed, verified (0 requests) |
+| 35 | P2 perf | Every status poll called Recall; three pollers per call tripled it. | Recall sync at most once per call every 5 s. | Fixed |
+| 36 | P2 bug | A reload restored an unsent meeting as a live notetaker session (recording bar plus polling). | Restore only joining, waiting and recording. | Fixed, verified |
+| 37 | P2 bug | A meeting created without the notetaker showed "on its way" plus "Remove notetaker", with no way to send one. | "No notetaker sent yet" with a Send notetaker button. | Fixed, verified |
+| 38 | P2 bug | Abandoned browser recordings stayed "Recording" forever. | After 6 h they are marked failed with a plain reason. | Fixed |
+| 39 | P2 bug | Opening an invite link as the workspace owner downgraded them to member. | Invite join no longer overwrites an existing role. | Fixed |
+| 40 | P2 validation | Highlight, tag and action item actions took unvalidated input (a tag from another user, any colour string, unbounded text). | Zod validation, tag ownership check, child writes scoped to the call. | Fixed |
+| 41 | P2 config | `middleware.ts` is deprecated in Next 16 (build warning). | Renamed to `proxy.ts`. | Fixed, build is now warning-free |
+| 42 | P2 ops | OAuth failures gave no provider detail. | In development the toast includes the provider's own reason. | Fixed |

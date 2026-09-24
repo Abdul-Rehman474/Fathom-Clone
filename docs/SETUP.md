@@ -19,7 +19,7 @@ add real keys only when you want live transcription, live AI, or real bots.
 **Steps**
 1. Create a Supabase project.
 2. In the SQL editor, run `supabase/migrations/0001_init.sql` → `0002` → `0003`
-   → `0004` → `0005` → `0006`, in order.
+   → `0004` → `0005` → `0006` → `0007`, in order.
 3. Auth → Providers → enable **Google**. Add redirect URLs:
    `http://localhost:3000/auth/callback` and your prod URL.
    (Google sign-in also needs a Google OAuth client ID/secret entered *in the

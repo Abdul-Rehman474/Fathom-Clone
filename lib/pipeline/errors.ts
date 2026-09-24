@@ -29,6 +29,13 @@ export function describeFailure(stage: string | null, error: string | null): Fai
       retryable: true,
     };
   }
+  if (/never uploaded/i.test(msg)) {
+    return {
+      cause: 'The recording was never uploaded.',
+      hint: 'The browser tab closed or lost its connection before the upload finished. Record again to capture this meeting.',
+      retryable: false,
+    };
+  }
   if (/media URL|recording file/i.test(msg)) {
     return {
       cause: 'The recording file could not be reached.',

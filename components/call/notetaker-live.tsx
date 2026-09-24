@@ -36,8 +36,18 @@ export function NotetakerLive({
   const { status, error } = live;
   const head = botHeadline(status);
   const failed = status === 'failed';
-  const inMeeting =
-    status === 'joining' || status === 'waiting_admit' || status === 'recording' || status === 'scheduled';
+  const unsent = status === 'scheduled';
+  const inMeeting = status === 'joining' || status === 'waiting_admit' || status === 'recording';
+
+  async function send() {
+    setBusy('retry');
+    const res = await fetch(`/api/calls/${callId}/notetaker`, { method: 'POST' }).catch(() => null);
+    setBusy(null);
+    if (res?.ok) {
+      toast.success('Notetaker sent');
+      setLive({ status: 'joining', error: null, failedStage: null });
+    } else toast.error((await messageOf(res)) ?? 'Could not send the notetaker. Try again.');
+  }
 
   async function retry() {
     setBusy('retry');
@@ -85,9 +95,14 @@ export function NotetakerLive({
         </motion.div>
       </AnimatePresence>
 
-      {!failed && <BotLifecycle status={status} className="mt-8" />}
+      {!failed && !unsent && <BotLifecycle status={status} className="mt-8" />}
 
       <div className="mt-8 flex flex-wrap items-center gap-3">
+        {unsent && (
+          <Button onClick={send} disabled={busy !== null}>
+            {busy === 'retry' ? <Loader2 className="animate-spin" /> : <RotateCcw />} Send notetaker
+          </Button>
+        )}
         {failed && (
           <Button onClick={retry} disabled={busy !== null}>
             {busy === 'retry' ? <Loader2 className="animate-spin" /> : <RotateCcw />} Send notetaker again

@@ -18,6 +18,8 @@ architecture.md §11 (security checklist). No features were added.
 | Offline (`npm run check:notetaker`) | 5 | 5 | links, Recall signatures, lifecycle |
 | Live audit, run 1 | 85 | 84 | playlist RLS rule needs migration 0005 |
 | Live audit, run 2 (stronger injection test) | 86 | 85 | same single item |
+| Live audit, run 3 (after 0005 applied) | 86 | 83 | Ask burst across a clock minute got 22 through (finding 27) |
+| Live audit, run 4 (after the fix) | 86 | **86** | clean |
 | Client bundle secret scan | 12 secrets × 229 served files | 0 leaks | values and names |
 | `tsc --noEmit`, `eslint .`, `next build` | | clean | |
 
@@ -55,6 +57,8 @@ afterwards.
 | 23 | Errors | `?connect_error=` from the OAuth callback was never shown, and the callback put raw exchange errors in the URL. | Medium | Settings and onboarding show a toast with a plain reason, then clean the URL. The callback sends only a code. | Fixed, verified in the browser |
 | 24 | Errors | Network errors in New Meeting, Send notetaker, Retry, Regenerate and Delete account were unhandled, which left spinners stuck or the overlay open. | Low | Each has a catch with a toast, and the overlay closes or shows the failure. | Fixed |
 | 25 | Privacy | Delete account listed only 100 storage objects, ignored errors, and left bot recordings at Recall. | Medium | Pages through storage, stops with a clear message on any error before deleting rows, and asks Recall to delete each bot's media. | Fixed, verified |
+| 27 | Rate limit | The 0005 counter reset on each clock minute, so a burst straddling :59 to :00 passed up to twice the limit (seen live: 22 of 22 allowed). | Medium | The route also applies an in-memory 60 s sliding window, and migration 0006 makes the DB counter sliding (weights the previous minute). | Fixed, verified (20 allowed, then 429) |
+| 28 | OAuth | A cancelled or provider-refused connection came back as "sign-in window expired", and a failed token save still reported "Connected". | Medium | The callback reads `?error=` and classifies exchange failures (callback address not registered, client rejected, save failed). The token save now throws on a DB error. | Fixed, verified |
 | 26 | Secrets | Architecture §11 asks for an ESLint rule keeping the service role client out of client code. | Low | `no-restricted-imports` for `components/**` covers the admin client, crypto, providers, AI and the pipeline. `server-only` also fails the build. | Fixed |
 
 ## Requirement by requirement
@@ -161,7 +165,11 @@ All of these passed.
 | Groq during help | Falls back to the closest FAQ answer | Not needed |
 | Upload to storage | Overlay "Retry upload" (Prompt 5) | Yes |
 
-## Open item
+## Open item (resolved)
+
+The owner applied 0005 on 2026-09-24; run 4 is clean. Apply `0006_rate_limit_sliding.sql` the same way for the durable sliding counter (the in-memory window already enforces the limit per server).
+
+### Original note
 
 The live project cannot be migrated from this environment: the database
 connection string resolves only over IPv6 here, and no Supabase management

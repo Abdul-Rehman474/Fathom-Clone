@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Per-user, per-minute rate limit for the Ask endpoints (architecture.md §11).
- * The count lives in Postgres (`bump_rate_limit`, migration 0005), so it holds
+ * The count lives in Postgres (`bump_rate_limit`, migrations 0005 and 0006), so it holds
  * across server instances and restarts. If that function is not installed yet
  * the limiter falls back to an in-memory window rather than letting every
  * request through. Never throws.
@@ -25,9 +25,13 @@ export async function checkRateLimit(
   key: string,
   perMinute: number,
 ): Promise<{ ok: boolean }> {
+  // The in-memory window is a true 60 s sliding window on this instance; the
+  // DB counter holds the limit across instances. Both must allow the request.
+  const local = memoryLimit(`${key}:${userId}`, perMinute);
+  if (!local) return { ok: false };
   const { data, error } = await supabase.rpc('bump_rate_limit', { p_bucket: key, p_limit: perMinute });
   if (!error && typeof data === 'boolean') return { ok: data };
-  return { ok: memoryLimit(`${key}:${userId}`, perMinute) };
+  return { ok: true };
 }
 
 /** For anonymous endpoints (the help bot): keyed by client address. */

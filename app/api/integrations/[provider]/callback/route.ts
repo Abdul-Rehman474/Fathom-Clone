@@ -23,6 +23,17 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ provide
     return NextResponse.redirect(back);
   };
 
+  // The provider sends ?error= instead of a code when the user cancels or the
+  // app is misconfigured; report that, not a misleading state error.
+  const providerError = request.nextUrl.searchParams.get('error');
+  if (providerError) {
+    console.error(
+      `oauth ${provider} returned error`,
+      providerError,
+      request.nextUrl.searchParams.get('error_description'),
+    );
+    return fail(providerError === 'access_denied' ? 'cancelled' : 'provider_error');
+  }
   if (!code || !state || !cookieState || state !== cookieState) return fail('state_mismatch');
 
   const supabase = await createClient();
@@ -43,7 +54,11 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ provide
       await storeTokens(supabase, user.id, 'zoom', tokens, email);
     }
   } catch (e) {
-    console.error('oauth exchange failed', e);
+    console.error(`oauth ${provider} exchange failed`, e);
+    const msg = e instanceof Error ? e.message : '';
+    if (/redirect/i.test(msg)) return fail('redirect_mismatch');
+    if (/invalid_client|unauthorized_client|failed: 401/i.test(msg)) return fail('bad_client');
+    if (/save/i.test(msg)) return fail('save_failed');
     return fail('exchange_failed');
   }
 

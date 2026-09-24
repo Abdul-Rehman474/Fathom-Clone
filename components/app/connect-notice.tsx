@@ -8,6 +8,12 @@ const NAMES: Record<string, string> = { google: 'Google Meet', zoom: 'Zoom' };
 const REASONS: Record<string, string> = {
   state_mismatch: 'The sign-in window expired or was opened from another session. Try connecting again.',
   exchange_failed: 'The provider did not finish the connection. Try again.',
+  cancelled: 'The connection was cancelled.',
+  provider_error: 'The provider refused the connection. Check the app settings in its developer console.',
+  redirect_mismatch:
+    'The provider does not recognise this app’s callback address. Add it in the provider’s developer console.',
+  bad_client: 'The provider rejected this app’s client ID or secret. Check the server settings.',
+  save_failed: 'The connection worked but could not be saved. Try again.',
 };
 
 /**

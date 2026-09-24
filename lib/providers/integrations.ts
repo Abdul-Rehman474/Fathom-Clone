@@ -35,7 +35,9 @@ export async function storeTokens(
     account_email: accountEmail,
   };
   if (tokens.refresh_token) row.refresh_token_enc = encryptToken(tokens.refresh_token);
-  await supabase.from('integrations').upsert(row, { onConflict: 'user_id,provider' });
+  const { error } = await supabase.from('integrations').upsert(row, { onConflict: 'user_id,provider' });
+  // Never report "Connected" when nothing was stored.
+  if (error) throw new Error(`Could not save the connection: ${error.message}`);
 }
 
 /**

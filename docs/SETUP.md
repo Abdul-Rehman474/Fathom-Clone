@@ -19,7 +19,7 @@ add real keys only when you want live transcription, live AI, or real bots.
 **Steps**
 1. Create a Supabase project.
 2. In the SQL editor, run `supabase/migrations/0001_init.sql` → `0002` → `0003`
-   → `0004` → `0005`, in order.
+   → `0004` → `0005` → `0006`, in order.
 3. Auth → Providers → enable **Google**. Add redirect URLs:
    `http://localhost:3000/auth/callback` and your prod URL.
    (Google sign-in also needs a Google OAuth client ID/secret entered *in the
@@ -67,8 +67,27 @@ directly.
 | `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET` | Zoom API (create links) |
 | `TOKEN_ENC_KEY` | 32-byte base64, `openssl rand -base64 32`: encrypts stored OAuth tokens |
 
-The "Create meeting", "Send notetaker", and PiP overlay UIs are built and call
-typed service seams that return a `not_configured` result until these land.
+### Connecting Google Meet and Zoom (provider console settings)
+
+The callback address must match `NEXT_PUBLIC_SITE_URL` exactly (scheme, host
+and port). For local development with `NEXT_PUBLIC_SITE_URL=http://localhost:3000`:
+
+**Google Cloud Console → APIs & Services → Credentials → your OAuth client (Web application):**
+- Authorized redirect URIs: `http://localhost:3000/api/integrations/google/callback`
+  (keep the Supabase `…supabase.co/auth/v1/callback` entry for Google sign-in too)
+- Enable the **Google Meet REST API** for the project.
+- OAuth consent screen: add the scope `…/auth/meetings.space.created`, and add
+  your Google account under **Test users** while the app is in Testing.
+
+**Zoom App Marketplace → your General (OAuth) app:**
+- OAuth Redirect URL and OAuth Allow List: `http://localhost:3000/api/integrations/zoom/callback`
+- Scopes: `meeting:write:meeting` (create meetings) and `user:read:user` (show the connected email).
+  Older apps name these `meeting:write` and `user:read`.
+- Use the **Development** client ID/secret while the app is unpublished.
+
+When a connection fails, Settings shows the reason (callback address not
+registered, client rejected, cancelled) and the dev server logs the provider's
+exact error.
 
 ---
 

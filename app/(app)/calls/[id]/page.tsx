@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { CallView } from '@/components/call/call-view';
 import { StatusPoller } from '@/components/call/status-poller';
 import { RetryButton } from '@/components/call/retry-button';
+import { NotetakerLive } from '@/components/call/notetaker-live';
 import { isTerminal } from '@/lib/pipeline/status';
 import type { Call, SummaryContent, TranscriptSegment, Attendee, ActionItem, Highlight, HighlightTag } from '@/lib/types';
 
@@ -27,6 +28,20 @@ export default async function CallPage({ params }: { params: Promise<{ id: strin
   if (!call) notFound();
   const c = call as Call;
 
+  // Notetaker calls: live bot lifecycle until ready (PRD FR-3.2).
+  const botFailed = c.status === 'failed' && c.failed_stage === 'bot';
+  if (c.source === 'bot' && (!isTerminal(c.status) || botFailed)) {
+    return (
+      <div className="mx-auto max-w-lg py-20">
+        <p className="mb-2 truncate text-sm text-text-3">{c.title ?? 'Meeting'}</p>
+        <NotetakerLive
+          callId={c.id}
+          initial={{ status: c.status, error: c.error, failedStage: c.failed_stage }}
+        />
+      </div>
+    );
+  }
+
   // Processing / failed states
   if (!isTerminal(c.status)) {
     const steps = [
@@ -36,7 +51,7 @@ export default async function CallPage({ params }: { params: Promise<{ id: strin
     ] as const;
     return (
       <div className="mx-auto max-w-lg py-20">
-        <StatusPoller />
+        <StatusPoller callId={c.id} />
         <p className="micro-label mb-3">Processing</p>
         <h1 className="font-display text-3xl font-semibold tracking-tight">{c.title ?? 'Your recording'}</h1>
         <p className="mt-3 text-text-2">This usually takes under a minute. The page updates on its own.</p>

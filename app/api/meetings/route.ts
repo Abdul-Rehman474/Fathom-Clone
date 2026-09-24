@@ -5,6 +5,8 @@ import { MOCK_PROVIDERS } from '@/lib/config';
 import { getValidAccessToken } from '@/lib/providers/integrations';
 import { googleCreateSpace } from '@/lib/providers/google-meet';
 import { zoomCreateMeeting } from '@/lib/providers/zoom';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { sendNotetaker } from '@/lib/bot/lifecycle';
 
 const bodySchema = z.object({
   provider: z.enum(['google', 'zoom']),
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: 'invalid_body' }, { status: 400 });
-  const { provider, title } = parsed.data;
+  const { provider, title, sendNotetaker: autoSend } = parsed.data;
 
   let meetingUrl: string;
   if (MOCK_PROVIDERS) {
@@ -63,5 +65,16 @@ export async function POST(request: NextRequest) {
     .select('id')
     .single();
 
-  return NextResponse.json({ callId: call?.id ?? null, meetingUrl });
+  // Auto-send the notetaker so it's waiting when the host opens the meeting.
+  let notetaker: 'sent' | 'failed' | 'off' = 'off';
+  if (autoSend && call?.id) {
+    try {
+      await sendNotetaker(createAdminClient(), call.id);
+      notetaker = 'sent';
+    } catch {
+      notetaker = 'failed';
+    }
+  }
+
+  return NextResponse.json({ callId: call?.id ?? null, meetingUrl, notetaker });
 }

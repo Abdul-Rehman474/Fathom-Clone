@@ -7,7 +7,7 @@ const CONFIG: Record<CallStatus, { label: string; className: string; dot?: strin
   joining: { label: 'Joining', className: 'bg-surface-3 text-text-2' },
   waiting_admit: { label: 'Waiting to be admitted', className: 'bg-warning/15 text-warning' },
   recording: { label: 'Recording', className: 'bg-lime/15 text-lime', dot: 'bg-lime' },
-  uploading: { label: 'Uploading', className: 'bg-cyan/15 text-cyan' },
+  uploading: { label: 'Processing', className: 'bg-cyan/15 text-cyan' },
   transcribing: { label: 'Transcribing', className: 'bg-cyan/15 text-cyan' },
   summarizing: { label: 'Summarizing', className: 'bg-cyan/15 text-cyan' },
   ready: { label: 'Ready', className: 'bg-success/15 text-success' },

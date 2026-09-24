@@ -9,6 +9,8 @@ import { NewMeetingDialog } from '@/components/app/new-meeting-dialog';
 import { Button } from '@/components/ui/button';
 import { TimestampChip } from '@/components/ui/chips';
 import { formatMonth, formatDate } from '@/lib/time';
+import { StatusPoller } from '@/components/call/status-poller';
+import { isTerminal } from '@/lib/pipeline/status';
 
 export const metadata = { title: 'My Calls' };
 
@@ -84,11 +86,14 @@ export default async function CallsPage({
     getProfileAndSettings(),
   ]);
   const grouped = groupByMonth(calls);
+  // Live status on the cards: poll only while some call is still active.
+  const activeIds = calls.filter((c) => !isTerminal(c.status)).map((c) => c.id);
   const hasMore = page * pageSize < total;
   const firstName = (profile?.full_name ?? 'there').split(' ')[0];
 
   return (
     <div className="flex gap-8">
+      {activeIds.length > 0 && <StatusPoller callIds={activeIds} />}
       <div className="min-w-0 flex-1">
         {/* Greeting / command header */}
         <header className="mb-10">

@@ -73,6 +73,38 @@ export function parseDeepgramCallback(body: unknown): DeepgramResult {
  * Submit a recording to Deepgram (async; the result arrives at the callback).
  * Returns the request_id used as the dedupe key. Live mode only.
  */
+const LISTEN_PARAMS = {
+  model: 'nova-3',
+  diarize: 'true',
+  utterances: 'true',
+  smart_format: 'true',
+  punctuate: 'true',
+  paragraphs: 'true',
+  detect_language: 'true',
+  summarize: 'v2',
+  topics: 'true',
+  sentiment: 'true',
+};
+
+/** True when NEXT_PUBLIC_SITE_URL is reachable by provider callbacks. */
+export function publicSite(): boolean {
+  const site = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+  return /^https:\/\//.test(site) && !/localhost|127\.0\.0\.1/.test(site);
+}
+
+/** Synchronous transcription (no callback) for local development. */
+export async function transcribeNow(mediaUrl: string): Promise<DeepgramResult> {
+  const key = process.env.DEEPGRAM_API_KEY;
+  if (!key) throw new Error('Deepgram not configured');
+  const res = await fetch(`https://api.deepgram.com/v1/listen?${new URLSearchParams(LISTEN_PARAMS)}`, {
+    method: 'POST',
+    headers: { Authorization: `Token ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: mediaUrl }),
+  });
+  if (!res.ok) throw new Error(`Deepgram failed: ${res.status} ${(await res.text()).slice(0, 200)}`);
+  return parseDeepgramCallback(await res.json());
+}
+
 export async function submitToDeepgram(params: {
   callId: string;
   mediaUrl: string;
@@ -83,16 +115,7 @@ export async function submitToDeepgram(params: {
   if (!key || !site) throw new Error('Deepgram or site URL not configured');
 
   const qs = new URLSearchParams({
-    model: 'nova-3',
-    diarize: 'true',
-    utterances: 'true',
-    smart_format: 'true',
-    punctuate: 'true',
-    paragraphs: 'true',
-    detect_language: 'true',
-    summarize: 'v2',
-    topics: 'true',
-    sentiment: 'true',
+    ...LISTEN_PARAMS,
     callback: `${site}/api/webhooks/deepgram?call=${params.callId}&secret=${encodeURIComponent(secret)}`,
   });
 

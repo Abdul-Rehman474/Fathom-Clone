@@ -29,8 +29,14 @@ behaviour; highlight-tag CRUD; delete account), referrals, Help & Feedback.
 pricing/billing.
 
 **Meeting connectors (real):** Google Meet & Zoom OAuth with encrypted tokens,
-refresh-on-expiry, and real link creation. The Recall notetaker bot and the
-Document Picture-in-Picture overlay are left as typed seams (later prompts).
+refresh-on-expiry, and real link creation.
+
+**Notetaker bot (Recall.ai):** send the bot to a pasted Meet/Zoom/Teams link or
+automatically from Create meeting; live status (Joining → Waiting to be
+admitted → Recording → Processing → Ready) on the call row, call page and
+dialog; failure reasons (not admitted, removed, meeting ended…) with retry;
+Remove notetaker; the recording banner setting controls the bot's video tile
+and join message. The Document Picture-in-Picture overlay is still a seam.
 
 Everything is demonstrable with `MOCK_PROVIDERS=true` (no paid keys needed).
 
@@ -51,7 +57,13 @@ See `docs/architecture.md` for the full design, `docs/PRD.md` for requirements,
 
 ## Capture paths
 
-1. **Send notetaker** — a bot joins a Meet/Zoom/Teams link (seam; Prompt 4).
+1. **Send notetaker** — a Recall.ai bot joins a Meet/Zoom/Teams link
+   (`lib/providers/recall.ts`, lifecycle in `lib/bot/lifecycle.ts`). Status
+   arrives by signed webhook (`/api/webhooks/recall`) and, while a call is
+   active, by polling `/api/calls/:id/status`, which also pulls the bot's
+   state from Recall so local dev works without a public URL. Both paths are
+   de-duplicated through `webhook_events`. When the bot is done, a fresh media
+   URL is fetched from Recall and handed to the normal Deepgram → Groq pipeline.
 2. **Record this tab** — `getDisplayMedia` + mic mixed via Web Audio, chunked
    MediaRecorder, uploaded directly to storage.
 3. **Upload** — an audio/video file goes through the same pipeline.
@@ -85,6 +97,7 @@ Full key list and security notes: **`docs/SETUP.md`**.
 - `npm run build` — production build (Turbopack)
 - `npm run typecheck` — `tsc --noEmit`
 - `npm run lint` — ESLint
+- `npm run check:notetaker` — offline checks: meeting-link validation, Recall webhook signatures, lifecycle mapping
 
 ## Security
 

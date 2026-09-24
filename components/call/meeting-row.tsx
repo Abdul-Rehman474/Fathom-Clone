@@ -52,6 +52,9 @@ export function MeetingRow({ call }: { call: CallCardData }) {
             {PLATFORM_LABEL[call.platform]}
             {ready && <> · {secToDurationLabel(call.duration_sec)}</>} · {formatDate(call.created_at)}
           </p>
+          {failed && call.error && call.failed_stage === 'bot' && (
+            <p className="mt-1.5 line-clamp-1 text-sm text-danger">{call.error}</p>
+          )}
         </div>
 
         <div className="flex shrink-0 items-center gap-5 sm:pt-0.5">

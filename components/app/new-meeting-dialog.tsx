@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, Video, Bot, Link2, Loader2, AlertTriangle } from 'lucide-react';
+import { Upload, Video, Bot, Link2, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,8 @@ import { MAX_UPLOAD_BYTES, ACCEPTED_UPLOAD_EXT } from '@/lib/config';
 import { uploadRecording, readMediaDuration } from '@/lib/capture-client';
 import { useTabRecorder, isTabCaptureSupported } from '@/components/capture/use-tab-recorder';
 import { msToClock } from '@/lib/time';
+import { parseMeetingUrl, PLATFORM_NAME } from '@/lib/meeting-url';
+import { NotetakerLive } from '@/components/call/notetaker-live';
 
 export function NewMeetingDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -55,11 +57,12 @@ export function NewMeetingDialog({ children }: { children: React.ReactNode }) {
 
 /* -------- Create meeting (Google Meet / Zoom) -------- */
 function CreateMeetingPanel() {
+  const router = useRouter();
   const [platform, setPlatform] = useState<'google' | 'zoom'>('google');
   const [title, setTitle] = useState('');
   const [autoNote, setAutoNote] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ url: string; callId: string | null } | null>(null);
+  const [result, setResult] = useState<{ url: string; callId: string | null; notetaker: 'sent' | 'failed' | 'off' } | null>(null);
   const [copied, setCopied] = useState(false);
 
   async function create() {
@@ -79,7 +82,8 @@ function CreateMeetingPanel() {
         }
         return;
       }
-      setResult({ url: json.meetingUrl, callId: json.callId });
+      router.refresh();
+      setResult({ url: json.meetingUrl, callId: json.callId, notetaker: json.notetaker ?? 'off' });
     } finally {
       setBusy(false);
     }
@@ -88,7 +92,7 @@ function CreateMeetingPanel() {
   if (result) {
     return (
       <div className="space-y-4">
-        <p className="text-lg font-semibold">Your meeting is ready 🎉</p>
+        <p className="font-display text-xl font-semibold tracking-tight">Your meeting is ready.</p>
         <div className="flex gap-2">
           <Input readOnly value={result.url} />
           <Button
@@ -107,10 +111,22 @@ function CreateMeetingPanel() {
             <Button className="w-full">Join meeting ↗</Button>
           </a>
         </div>
-        <p className="flex items-center gap-2 text-sm text-text-3">
-          <Bot className="size-4" />{' '}
-          {autoNote ? 'The notetaker will join when the bot connector is enabled.' : 'Notetaker not sent.'}
-        </p>
+        {result.notetaker === 'sent' && result.callId ? (
+          <div className="border-t border-border pt-5">
+            <NotetakerLive
+              variant="dialog"
+              callId={result.callId}
+              initial={{ status: 'joining', error: null, failedStage: null }}
+            />
+          </div>
+        ) : (
+          <p className="flex items-center gap-2 text-sm text-text-3">
+            <Bot className="size-4" />
+            {result.notetaker === 'failed'
+              ? 'The notetaker couldn’t be sent. Open the call to try again.'
+              : 'Notetaker not sent.'}
+          </p>
+        )}
       </div>
     );
   }
@@ -143,22 +159,78 @@ function CreateMeetingPanel() {
   );
 }
 
-/* -------- Join with notetaker (Recall seam — Prompt 4) -------- */
+/* -------- Join with notetaker (Recall bot, PRD FR-3.2) -------- */
 function NotetakerPanel() {
+  const router = useRouter();
   const [url, setUrl] = useState('');
-  const valid = /https?:\/\/(meet\.google\.com|.*zoom\.us|teams\.(microsoft|live)\.com)/i.test(url);
+  const [title, setTitle] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState<{ callId: string; error: string | null } | null>(null);
+  const meeting = parseMeetingUrl(url);
+
+  async function send(e: React.FormEvent) {
+    e.preventDefault();
+    if (!meeting || busy) return;
+    setBusy(true);
+    try {
+      const res = await fetch('/api/notetaker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ meetingUrl: url.trim(), title }),
+      });
+      const json = await res.json().catch(() => ({}));
+      // Refresh so the new call's live row appears behind the dialog.
+      if (json.callId) router.refresh();
+      if (json.callId) setSent({ callId: json.callId, error: res.ok ? null : (json.message ?? 'Could not send the notetaker.') });
+      else toast.error(json.message ?? 'Could not send the notetaker');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (sent) {
+    return (
+      <NotetakerLive
+        variant="dialog"
+        callId={sent.callId}
+        initial={
+          sent.error
+            ? { status: 'failed', error: sent.error, failedStage: 'bot' }
+            : { status: 'joining', error: null, failedStage: null }
+        }
+      />
+    );
+  }
+
   return (
-    <div className="space-y-4">
-      <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste a Meet, Zoom or Teams link" />
-      {url && !valid && <p className="text-xs text-danger">That doesn’t look like a supported meeting link.</p>}
-      <div className="flex items-start gap-2 rounded-btn border border-border bg-surface-2 p-3 text-sm text-text-3">
-        <AlertTriangle className="mt-0.5 size-4 text-warning" />
-        The notetaker bot is set up in a later step. The link is validated here so the flow is ready.
+    <form onSubmit={send} className="space-y-4" noValidate>
+      <div className="space-y-2">
+        <label htmlFor="nt-url" className="micro-label">Meeting link</label>
+        <Input
+          id="nt-url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="Paste a Meet, Zoom or Teams link"
+          aria-invalid={!!url && !meeting}
+          aria-describedby="nt-url-hint"
+          autoComplete="off"
+        />
+        <p id="nt-url-hint" className={cn('text-xs', url && !meeting ? 'text-danger' : meeting ? 'text-lime' : 'text-text-3')}>
+          {!url
+            ? 'Google Meet, Zoom and Microsoft Teams links are supported.'
+            : meeting
+              ? `${PLATFORM_NAME[meeting.platform]} link`
+              : 'That isn’t a Google Meet, Zoom or Microsoft Teams meeting link.'}
+        </p>
       </div>
-      <Button className="w-full" disabled={!valid}>
-        <Bot /> Send Notetaker
+      <Input placeholder="Title (optional)" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
+      <p className="text-xs text-text-3">
+        The notetaker joins under the bot name from Settings. Admit it from the lobby to start recording.
+      </p>
+      <Button type="submit" className="w-full" disabled={!meeting || busy}>
+        {busy ? <Loader2 className="animate-spin" /> : <Bot />} {busy ? 'Sending…' : 'Send notetaker'}
       </Button>
-    </div>
+    </form>
   );
 }
 

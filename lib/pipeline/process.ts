@@ -2,11 +2,12 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { MOCK_PROVIDERS } from '@/lib/config';
-import { mapUtterances, submitToDeepgram, type DeepgramResult } from '@/lib/providers/deepgram';
+import { mapUtterances, submitToDeepgram, transcribeNow, publicSite, type DeepgramResult } from '@/lib/providers/deepgram';
 import { mockUtterances, mockDeepgramExtras } from '@/lib/providers/mock-fixtures';
 import { summarizeCall } from '@/lib/ai/summarize';
 import type { SummaryContent } from '@/lib/types';
 import { sleep } from '@/lib/pipeline/status';
+import { getRecordingUrl } from '@/lib/providers/recall';
 
 type DB = SupabaseClient;
 
@@ -29,7 +30,7 @@ export async function runPipeline(callId: string): Promise<void> {
   try {
     const { data: call } = await db
       .from('calls')
-      .select('id, duration_sec, media_path, media_kind, template, owner_id, title')
+      .select('id, duration_sec, media_path, media_kind, template, owner_id, title, source, bot_id')
       .eq('id', callId)
       .maybeSingle();
     if (!call) return;
@@ -48,12 +49,30 @@ export async function runPipeline(callId: string): Promise<void> {
       return;
     }
 
-    // Live: sign the media and submit to Deepgram; the callback finishes the job.
-    const { data: signed } = await db.storage
-      .from('recordings')
-      .createSignedUrl(call.media_path!, 3600);
-    if (!signed?.signedUrl) throw new Error('Could not sign media URL');
-    const { requestId } = await submitToDeepgram({ callId, mediaUrl: signed.signedUrl });
+    // Live: resolve a media URL (our storage, or a fresh one from the bot
+    // provider) and submit to Deepgram; the callback finishes the job.
+    let mediaUrl: string | null = null;
+    if (call.media_path) {
+      const { data: signed } = await db.storage.from('recordings').createSignedUrl(call.media_path, 3600);
+      mediaUrl = signed?.signedUrl ?? null;
+    } else if (call.source === 'bot' && call.bot_id) {
+      // The bot's media can lag its `done` event by a few seconds.
+      let rec = await getRecordingUrl(call.bot_id);
+      for (let i = 0; !rec && i < 5; i++) {
+        await sleep(3000);
+        rec = await getRecordingUrl(call.bot_id);
+      }
+      mediaUrl = rec?.url ?? null;
+      if (rec) await db.from('calls').update({ media_kind: rec.kind }).eq('id', callId);
+    }
+    if (!mediaUrl) throw new Error('Could not get a media URL for this recording');
+    if (!publicSite()) {
+      // Deepgram can't call back to localhost: transcribe synchronously.
+      const result = await transcribeNow(mediaUrl);
+      await ingestTranscript(db, callId, result);
+      return;
+    }
+    const { requestId } = await submitToDeepgram({ callId, mediaUrl });
     await db.from('calls').update({ transcript_job_id: requestId }).eq('id', callId);
   } catch (err) {
     await markFailed(db, callId, 'transcribing', err instanceof Error ? err.message : 'Transcription failed');

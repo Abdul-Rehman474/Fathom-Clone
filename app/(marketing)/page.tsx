@@ -28,9 +28,13 @@ export default function HomePage() {
               Used at <CountUp to={300000} suffix="+" className="font-semibold text-text-1" /> companies
             </span>
           </div>
+          <p className="sr-only">Used by teams at {LOGO_WALL.join(', ')}.</p>
           <Marquee className="w-full">
             {LOGO_WALL.map((name) => (
-              <div key={name} className="flex h-16 w-40 items-center justify-center rounded-card border border-border bg-surface-1 text-text-3">
+              <div
+                key={name}
+                className="flex h-16 w-40 items-center justify-center rounded-card border border-border bg-surface-1 text-text-3"
+              >
                 {name}
               </div>
             ))}
@@ -48,6 +52,7 @@ export default function HomePage() {
 
       {/* 4. Marquee statement */}
       <Section className="!py-16">
+        <p className="sr-only">Move work forward faster.</p>
         <Marquee seconds={40}>
           <span className="flex items-center gap-4 font-display text-5xl font-semibold tracking-tight text-text-1">
             Move work forward faster <Rocket className="size-16" />
@@ -65,14 +70,21 @@ export default function HomePage() {
               Whether you’re a team of 1 or 1,000, {BRAND_NAME}’s got your back
             </h2>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              {['Instant AI summaries', 'Speaker-labelled transcripts', 'Ask across every call', 'Shareable highlight playlists'].map((f) => (
+              {[
+                'Instant AI summaries',
+                'Speaker-labelled transcripts',
+                'Ask across every call',
+                'Shareable highlight playlists',
+              ].map((f) => (
                 <div key={f} className="rounded-card border border-border bg-surface-1 p-4 text-sm text-text-2">
                   ✦ {f}
                 </div>
               ))}
             </div>
             <Link href="/pricing" className="mt-6 inline-block">
-              <Pill variant="secondary" className="h-11 px-6 text-sm">See our pricing</Pill>
+              <Pill variant="secondary" className="h-11 px-6 text-sm">
+                See our pricing
+              </Pill>
             </Link>
           </div>
         </Reveal>
@@ -88,7 +100,9 @@ export default function HomePage() {
       {/* 7. CTA block */}
       <Section>
         <div className="rounded-frame border border-border bg-carbon-soft px-8 py-16 text-center">
-          <h2 className="font-display text-4xl font-semibold tracking-tight text-white">Ready to never take notes again?</h2>
+          <h2 className="font-display text-4xl font-semibold tracking-tight text-white">
+            Ready to never take notes again?
+          </h2>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link href="/help">
               <Pill>Talk to sales</Pill>

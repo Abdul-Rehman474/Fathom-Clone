@@ -245,12 +245,25 @@ function Overlay({ mode }: { mode: 'pip' | 'docked' }) {
 
       {/* summary / scratchpad */}
       <div className="flex min-h-0 flex-1 flex-col px-4 pt-3">
-        <div className="flex gap-5 border-b border-border text-sm" role="tablist">
+        <div
+          className="flex gap-5 border-b border-border text-sm"
+          role="tablist"
+          aria-label="Overlay panels"
+          onKeyDown={(e) => {
+            // Arrow keys move between tabs (WAI-ARIA tabs pattern).
+            if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+            e.preventDefault();
+            setTab(tab === 'scratchpad' ? 'summary' : 'scratchpad');
+            const tabs = e.currentTarget.querySelectorAll<HTMLButtonElement>('[role=tab]');
+            tabs[tab === 'scratchpad' ? 1 : 0]?.focus();
+          }}
+        >
           {(['scratchpad', 'summary'] as const).map((k) => (
             <button
               key={k}
               role="tab"
               aria-selected={tab === k}
+              tabIndex={tab === k ? 0 : -1}
               onClick={() => setTab(k)}
               className={cn(
                 '-mb-px border-b-2 pb-2 capitalize transition-colors',

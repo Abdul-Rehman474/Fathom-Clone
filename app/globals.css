@@ -18,7 +18,7 @@
   --off-white: #f3f5ef;
   --white: #ffffff;
   --muted: #9ba298;
-  --muted-dark: #6f756d;
+  --muted-dark: #8a9188; /* 4.5:1+ on every surface (a11y-audit.md) */
 
   /* surfaces (mapped) */
   --bg-black: var(--carbon-deep);

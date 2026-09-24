@@ -55,6 +55,12 @@ export function AppShell({
   return (
     <TooltipProvider delayDuration={200}>
       <CaptureSessionProvider>
+        <a
+          href="#main"
+          className="sr-only z-50 rounded-btn bg-lime px-4 py-2 text-sm font-semibold text-carbon focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+        >
+          Skip to content
+        </a>
         <div className="flex min-h-screen bg-bg-app">
           {/* Desktop sidebar */}
           <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-border lg:block">
@@ -63,8 +69,14 @@ export function AppShell({
 
           {/* Mobile sidebar sheet */}
           {mobileNav && (
-            <div className="fixed inset-0 z-50 lg:hidden">
-              <div className="absolute inset-0 bg-black/60" onClick={() => setMobileNav(false)} />
+            <div
+              className="fixed inset-0 z-50 lg:hidden"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigation"
+              onKeyDown={(e) => e.key === 'Escape' && setMobileNav(false)}
+            >
+              <div className="absolute inset-0 bg-black/60" aria-hidden onClick={() => setMobileNav(false)} />
               <div className="absolute left-0 top-0 h-full w-72 border-r border-border bg-bg-app">
                 <button
                   onClick={() => setMobileNav(false)}
@@ -113,7 +125,9 @@ export function AppShell({
 
             <RecordingBar />
 
-            <main className="page-in flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
+            <main id="main" tabIndex={-1} className="page-in flex-1 px-4 py-6 outline-none md:px-8 md:py-8">
+              {children}
+            </main>
           </div>
         </div>
         <OverlayHost />

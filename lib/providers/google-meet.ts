@@ -1,4 +1,5 @@
 import 'server-only';
+import { SITE_URL } from '@/lib/supabase/env';
 
 /** Google Meet connector (architecture.md §6). OAuth + create a meeting space. */
 const AUTH = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -6,7 +7,7 @@ const TOKEN = 'https://oauth2.googleapis.com/token';
 const SCOPE = 'https://www.googleapis.com/auth/meetings.space.created openid email';
 
 export function googleRedirectUri(): string {
-  return `${process.env.NEXT_PUBLIC_SITE_URL}/api/integrations/google/callback`;
+  return `${SITE_URL}/api/integrations/google/callback`;
 }
 
 export function googleAuthUrl(state: string): string {

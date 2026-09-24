@@ -1,5 +1,6 @@
 import 'server-only';
 import type { Utterance } from '@/lib/providers/mock-fixtures';
+import { SITE_URL } from '@/lib/supabase/env';
 
 /** Speaker index → "Speaker A" (architecture.md §4.0). */
 export function speakerLabel(speaker: number): string {
@@ -88,7 +89,7 @@ const LISTEN_PARAMS = {
 
 /** True when NEXT_PUBLIC_SITE_URL is reachable by provider callbacks. */
 export function publicSite(): boolean {
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+  const site = SITE_URL;
   return /^https:\/\//.test(site) && !/localhost|127\.0\.0\.1/.test(site);
 }
 
@@ -110,7 +111,7 @@ export async function transcribeNow(mediaUrl: string): Promise<DeepgramResult> {
 
 export async function submitToDeepgram(params: { callId: string; mediaUrl: string }): Promise<{ requestId: string }> {
   const key = process.env.DEEPGRAM_API_KEY;
-  const site = process.env.NEXT_PUBLIC_SITE_URL;
+  const site = SITE_URL;
   const secret = process.env.DEEPGRAM_WEBHOOK_SECRET ?? '';
   if (!key || !site) throw new Error('Deepgram or site URL not configured');
 

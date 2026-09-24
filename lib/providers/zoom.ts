@@ -1,12 +1,13 @@
 import 'server-only';
 import type { TokenSet } from '@/lib/providers/google-meet';
+import { SITE_URL } from '@/lib/supabase/env';
 
 /** Zoom connector (architecture.md §6). OAuth + create a meeting. */
 const AUTH = 'https://zoom.us/oauth/authorize';
 const TOKEN = 'https://zoom.us/oauth/token';
 
 export function zoomRedirectUri(): string {
-  return `${process.env.NEXT_PUBLIC_SITE_URL}/api/integrations/zoom/callback`;
+  return `${SITE_URL}/api/integrations/zoom/callback`;
 }
 
 export function zoomAuthUrl(state: string): string {

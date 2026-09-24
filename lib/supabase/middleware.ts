@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase/env';
 
 const PROTECTED_PREFIXES = ['/calls', '/team', '/playlists', '/alerts', '/deals', '/settings', '/onboarding', '/join'];
 
@@ -10,8 +11,8 @@ const PROTECTED_PREFIXES = ['/calls', '/team', '/playlists', '/alerts', '/deals'
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = SUPABASE_URL;
+  const key = SUPABASE_ANON_KEY;
   // Without Supabase configured we cannot authenticate; let requests through so
   // the marketing site still renders.
   if (!url || !key) return response;

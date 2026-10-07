@@ -1,0 +1,242 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------ *
+ * Design system — Carbon + Lime (premium editorial dark UI).
+ * Legacy token NAMES are kept and remapped to the new palette so every
+ * existing utility (bg-cyan, surface-1, text-2 …) adopts the system.
+ * ------------------------------------------------------------------ */
+:root {
+  color-scheme: dark;
+
+  /* Carbon + Lime core */
+  --carbon: #111310;
+  --carbon-deep: #090a09;
+  --carbon-soft: #181b17;
+  --lime: #c8ff3d;
+  --lime-bright: #d7ff68;
+  --lime-dark: #9fc92f;
+  --off-white: #f3f5ef;
+  --white: #ffffff;
+  --muted: #9ba298;
+  --muted-dark: #8a9188; /* 4.5:1+ on every surface (a11y-audit.md) */
+
+  /* surfaces (mapped) */
+  --bg-black: var(--carbon-deep);
+  --bg-app: var(--carbon);
+  --surface-1: var(--carbon-soft);
+  --surface-2: #1f231d;
+  --surface-3: #2a2f26;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  /* text (mapped) */
+  --text-1: var(--off-white);
+  --text-2: var(--muted);
+  --text-3: var(--muted-dark);
+
+  /* brand/accent → lime family (restraint: lime is special) */
+  --cyan: var(--lime);
+  --cyan-press: var(--lime-dark);
+  --cyan-tint: #1e2a10;
+  --yellow: var(--lime-bright);
+  --orange: var(--lime);
+  --gold: var(--lime-bright);
+  --purple: var(--carbon-soft);
+  --pink: var(--lime);
+
+  /* status */
+  --success: var(--lime);
+  --warning: #e5c558;
+  --danger: #e5484d;
+  --danger-tint: #2a1416;
+
+  /* highlight tag defaults (data-driven; kept) */
+  --tag-highlight: var(--lime);
+  --tag-positive: #6fcf3f;
+  --tag-review: #e5c558;
+  --tag-feedback: #e08a3c;
+
+  /* typography */
+  --font-heading: var(--font-display-face), Arial, Helvetica, sans-serif;
+  --font-body: var(--font-body-face), Arial, Helvetica, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@theme inline {
+  --color-bg-black: var(--bg-black);
+  --color-bg-app: var(--bg-app);
+  --color-carbon: var(--carbon);
+  --color-carbon-deep: var(--carbon-deep);
+  --color-carbon-soft: var(--carbon-soft);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+
+  --color-lime: var(--lime);
+  --color-lime-bright: var(--lime-bright);
+  --color-lime-dark: var(--lime-dark);
+  --color-off-white: var(--off-white);
+  --color-muted: var(--muted);
+
+  --color-cyan: var(--cyan);
+  --color-cyan-press: var(--cyan-press);
+  --color-cyan-tint: var(--cyan-tint);
+  --color-yellow: var(--yellow);
+  --color-orange: var(--orange);
+  --color-gold: var(--gold);
+  --color-purple: var(--purple);
+  --color-pink: var(--pink);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+
+  --font-display: var(--font-heading);
+  --font-sans: var(--font-body);
+  --font-pill: var(--font-heading);
+  --font-mono: var(--font-mono);
+
+  /* radii — editorial: restrained rounding */
+  --radius-chip: 4px;
+  --radius-btn: 6px;
+  --radius-card: 10px;
+  --radius-frame: 14px;
+  --radius-pill: 999px;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  background: var(--bg-app);
+  color: var(--text-1);
+}
+
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Display type: tight tracking + leading for editorial headings. */
+.font-display {
+  letter-spacing: -0.02em;
+}
+
+/* Micro-label: uppercase, letter-spaced, muted (design §8). */
+.micro-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-3);
+}
+
+/* Visible 2px lime focus ring everywhere. */
+:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Styled, visible scrollbars on scroll panes. */
+.scroll-styled {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.scroll-styled::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scroll-styled::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 2px solid var(--bg-app);
+}
+
+/* Marquee loop (marketing). Content is duplicated → -50% is seamless. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Recording dot pulse (subtle). */
+@keyframes rec-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.rec-dot {
+  animation: rec-pulse 1.4s ease-in-out infinite;
+}
+
+/* Caret blink for the typewriter. */
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.caret {
+  animation: caret-blink 1s step-end infinite;
+}
+
+/* Indeterminate lime progress bar for loading states. */
+@keyframes loading-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* Page-enter: subtle fade + rise. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-in {
+  animation: page-in 0.32s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

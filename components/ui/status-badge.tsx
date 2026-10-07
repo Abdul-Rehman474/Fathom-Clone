@@ -1,0 +1,42 @@
+'use client';
+
+import { motion } from 'motion/react';
+import { cn } from '@/lib/utils';
+import type { CallStatus } from '@/lib/types';
+
+/** Status badge (designPlan.md §6, UI.md §6). Colour is never the only signal. */
+const CONFIG: Record<CallStatus, { label: string; className: string; dot?: string }> = {
+  scheduled: { label: 'Scheduled', className: 'bg-surface-3 text-text-2' },
+  joining: { label: 'Joining', className: 'bg-surface-3 text-text-2' },
+  waiting_admit: { label: 'Waiting to be admitted', className: 'bg-warning/15 text-warning' },
+  recording: { label: 'Recording', className: 'bg-lime/15 text-lime', dot: 'bg-lime' },
+  uploading: { label: 'Processing', className: 'bg-cyan/15 text-cyan' },
+  transcribing: { label: 'Transcribing', className: 'bg-cyan/15 text-cyan' },
+  summarizing: { label: 'Summarizing', className: 'bg-cyan/15 text-cyan' },
+  ready: { label: 'Ready', className: 'bg-success/15 text-success' },
+  failed: { label: 'Failed', className: 'bg-danger/15 text-danger' },
+};
+
+export function StatusBadge({ status, className }: { status: CallStatus; className?: string }) {
+  const c = CONFIG[status];
+  const animated = status === 'transcribing' || status === 'summarizing';
+  return (
+    <motion.span
+      key={status}
+      initial={{ opacity: 0, scale: 0.92 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-xs font-medium',
+        c.className,
+        className,
+      )}
+    >
+      {c.dot && (
+        <span className={cn('size-1.5 rounded-full', c.dot, status === 'recording' && 'rec-dot')} />
+      )}
+      {c.label}
+      {animated && <span className="tnum">…</span>}
+    </motion.span>
+  );
+}

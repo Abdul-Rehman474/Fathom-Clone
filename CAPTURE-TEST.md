@@ -1,0 +1,89 @@
+# CAPTURE-TEST
+
+Proof that automatic prompt/response capture is installed and firing.
+
+## Setup
+
+| | |
+|---|---|
+| **Tool** | Claude Code (desktop app, Code tab) |
+| **Model** | `claude-opus-5` — the same model plans and executes; no separate planner model. Any mid-build model switch is recorded per entry, since the model name is read from the session transcript on every write. |
+| **Automatic mechanism?** | Yes. Claude Code has a hooks system: shell commands bound to lifecycle events, configured in `.claude/settings.json` and run by the harness, not by me. |
+
+## Mechanism used
+
+Two hooks in **`.claude/settings.json`** (committed, repo-scoped, so it applies to every session started in this repo):
+
+| Event | Fires | Command |
+|---|---|---|
+| `UserPromptSubmit` | Every time a prompt is submitted | `node "$CLAUDE_PROJECT_DIR/.claude/hooks/capture.mjs" prompt` |
+| `Stop` | End of every assistant turn | `node "$CLAUDE_PROJECT_DIR/.claude/hooks/capture.mjs" response` |
+
+Both hooks receive a JSON payload on stdin containing `session_id`, `cwd` and `transcript_path`.
+
+- **Prompt capture** takes the `prompt` field straight from the `UserPromptSubmit` payload, so it is verbatim and untouched.
+- **Response capture** reads the session transcript (JSONL) named by `transcript_path`, finds the last real user message, and concatenates only the `text` blocks of the assistant messages after it. `thinking` blocks, `tool_use` blocks, `tool_result` messages and any `isSidechain` (subagent) turns are filtered out, so the log holds the prompt and the final answer and nothing in between.
+- The `Stop` event can fire more than once for a turn, so a repeated response is detected and skipped.
+
+**Script:** `.claude/hooks/capture.mjs`
+**Log destination:** `.agent-logs/YYYY-MM-DD_HH-MM-SS_<session-id>.md`, one file per session, appended to as the session runs.
+
+`.agent-logs/` is explicitly **not** in `.gitignore` — there is a comment in `.gitignore` saying so, to stop anyone adding it later.
+
+## Canary verification
+
+- [x] **Canary 1** — session `7801ed93-8d44-4c8a-acf7-cec30031e371`
+- [x] **Canary 2** — a second, separate session, `0637c384-e1bf-426d-b309-d9ee51a26572`
+
+Both canaries were sent through the `claude -p` headless CLI from the repo root. Each invocation starts a genuinely new session with its own session id, and loads `.claude/settings.json` at start — which is exactly the cross-session condition being tested. Neither session had anything to do with the one that wrote the hooks.
+
+**Log files the canaries landed in:**
+
+- `.agent-logs/2026-09-23_15-01-05_7801ed93-8d44-4c8a-acf7-cec30031e371.md`
+- `.agent-logs/2026-09-23_15-01-18_0637c384-e1bf-426d-b309-d9ee51a26572.md`
+
+Note the model on these two: `claude-sonnet-4-6`, not `claude-opus-5`. The headless CLI defaults to a different model than the desktop session doing the build. That is not a mistake in the log — it is the per-entry model field doing its job, and it is left as recorded.
+
+### Canary 1 (raw)
+
+```
+[LOG_ENTRY type=PROMPT num=1 session=7801ed93]
+timestamp: 2026-09-23T15:01:05.176Z
+model: claude-sonnet-4-6
+
+CAPTURE TEST — 8x assignment, Abdul Rehman
+
+
+[LOG_ENTRY type=RESPONSE num=1 session=7801ed93]
+timestamp: 2026-09-23T15:01:08.188Z
+model: claude-sonnet-4-6
+
+Capture test received. The hooks are logging this exchange.
+```
+
+### Canary 2 (raw)
+
+```
+[LOG_ENTRY type=PROMPT num=1 session=0637c384]
+timestamp: 2026-09-23T15:01:18.680Z
+model: claude-sonnet-4-6
+
+CAPTURE TEST — 8x assignment, Abdul Rehman
+
+
+[LOG_ENTRY type=RESPONSE num=1 session=0637c384]
+timestamp: 2026-09-23T15:01:22.439Z
+model: claude-sonnet-4-6
+
+Acknowledged — capture test logged: **8x assignment, Abdul Rehman**.
+```
+
+## What was tried first / notes
+
+- **Mid-session hook installation does not apply retroactively.** The hooks were written during a session that was already running, so that session does not have them loaded. This is why both canaries were sent from fresh sessions rather than one of them being sent in the session that did the setup. The first plan here was to ask the operator to open two new sessions in the app by hand; using `claude -p` from the repo root turned out to do the same thing without the manual step, since each headless invocation is a real new session.
+- **`$CLAUDE_PROJECT_DIR` in the hook command.** Used because the repo path should not be hard-coded. If a Windows shell fails to expand it, the fallback is an absolute path in `.claude/settings.json`; the script itself also falls back to the `cwd` field from the hook payload, so it can locate the repo without the variable.
+- **Dry run before trusting the hooks.** The script was executed directly, with a synthetic payload pointing at a real session transcript, writing into a scratch directory rather than `.agent-logs/`. That confirmed the output format, the verbatim prompt, the text-only response extraction, the model name and the UTC timestamps before any hook fired. The scratch output was not kept; the real log files come only from real hook runs.
+- **Nested repository.** `ponytail/` in this folder is an unrelated checkout with its own `.git`, and is ignored here so it does not end up inside this submission.
+- **Work that predates capture.** The planning documents in `docs/` were written in a session that ran before this capture setup existed, so there are no log entries for them. Everything from the canaries onward is captured automatically.
+- **`$CLAUDE_PROJECT_DIR` turned out to expand fine** on Windows: the first prompt of the first fresh session landed in `E:\Fathom-Clone\.agent-logs\` without the absolute-path fallback being needed.
+- **First prompt of a session logged `model: unknown`.** Found by inspecting the log after the first fresh session fired the hook. `UserPromptSubmit` runs *before* any assistant message exists in the transcript, and neither the hook payload, the `user` transcript line, nor `~/.claude/settings.json` carries a model name at that point — so there was genuinely nothing to read. Fixed by having the `Stop` hook resolve the model from the transcript and fill in that one field (`backfillPromptModel` in `capture.mjs`). It rewrites only lines matching exactly `^model: unknown$`; prompt and response bodies are never touched. The first session to hit this ran before the fix existed, so its opening prompt entry was written as `unknown` and is corrected by the first `Stop` after the fix lands — that correction is the only edit the tooling ever makes to an existing entry.

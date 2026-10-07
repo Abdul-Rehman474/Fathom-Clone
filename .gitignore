@@ -36,3 +36,6 @@ FATHOM_CLONE.docx
 
 # Project docs are kept locally, not in the repository
 docs/
+
+# Local Claude Code settings
+.claude/

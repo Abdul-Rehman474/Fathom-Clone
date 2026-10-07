@@ -1,0 +1,38 @@
+# dependencies
+node_modules/
+.pnp/
+.yarn/
+
+# build output
+.next/
+out/
+build/
+dist/
+
+# env
+.env
+.env.local
+.env*.local
+
+# local machine / editor
+.DS_Store
+Thumbs.db
+*.log
+.vercel/
+.claude/settings.local.json
+
+# NOTE: .agent-logs/ is intentionally NOT ignored.
+# The agent capture logs are part of the submission and ship with the repo.
+
+# unrelated repo that happens to sit in this folder
+ponytail/
+
+# reference material — not part of the shipped repo
+FATHOM_CLONE.docx
+*.docx
+
+# TS build cache
+*.tsbuildinfo
+
+# Project docs are kept locally, not in the repository
+docs/
